@@ -1,3 +1,9 @@
+mod hardware;
+use hardware::cpu::CPU;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Rust6502 Emulator");
+    let mut cpu = CPU::new();
+
+    println!("CPU: {:#?}", cpu);
 }

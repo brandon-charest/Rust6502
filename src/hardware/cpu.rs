@@ -46,18 +46,76 @@ impl CPU {
         let opcode = Opcode::from_u8(raw_data).expect("Unknown Opcode");
 
         match opcode.syntax {
+            // ===== LOAD/STORE =====
             OpcodeSyntax::LDA => {
-                let addr = self.get_operand_address(&opcode.mode, bus);
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
                 let value = self.read(bus, addr);
                 self.registers.accumulator = value;
                 self.update_nz_flags(value);
             }
+            OpcodeSyntax::LDX => {
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
+                let value = self.read(bus, addr);
+                self.registers.x_register = value;
+                self.update_nz_flags(value);
+            }
+            OpcodeSyntax::LDY => {
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
+                let value = self.read(bus, addr);
+                self.registers.y_register = value;
+                self.update_nz_flags(value);
+            }
+            OpcodeSyntax::STA => {
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Write);
+                self.write(bus, addr, self.registers.accumulator);
+            }
+            OpcodeSyntax::STX => {
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Write);
+                self.write(bus, addr, self.registers.x_register);
+            }
+            OpcodeSyntax::STY => {
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Write);
+                self.write(bus, addr, self.registers.y_register);
+            }
+            // TAX (Transfer Accumulator -> X)
+            OpcodeSyntax::TAX => {
+                self.registers.x_register = self.registers.accumulator;
+                self.update_nz_flags(self.registers.x_register);
+            }
+            // TAY (Transfer Accumulator -> Y)
+            OpcodeSyntax::TAY => {
+                self.registers.y_register = self.registers.accumulator;
+                self.update_nz_flags(self.registers.y_register);
+            }
+            // TXA (Transfer X -> Accumulator)
+            OpcodeSyntax::TXA => {
+                self.registers.accumulator = self.registers.x_register;
+                self.update_nz_flags(self.registers.accumulator);
+            }
+            // TYA (Transfer Y -> Accumulator)
+            OpcodeSyntax::TYA => {
+                self.registers.accumulator = self.registers.y_register;
+                self.update_nz_flags(self.registers.accumulator);
+            }
+            // TXS (Transfer X -> Stack Pointer)
+            OpcodeSyntax::TXS => {
+                self.registers.stack_pointer = self.registers.x_register;
+                // DO NOT UPDATE FLAGS
+            }
+            // TSX (Transfer Stack Pointer -> X)
+            OpcodeSyntax::TSX => {
+                self.registers.x_register = self.registers.stack_pointer;
+                self.update_nz_flags(self.registers.x_register);
+            }
+            OpcodeSyntax::JMP => {
+                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
+                self.registers.program_counter = addr;
+            }
             OpcodeSyntax::NOP => {
                 let _ = self.read(bus, self.registers.program_counter);
             }
-            OpcodeSyntax::STA => {
-                let addr = self.get_operand_address(&opcode.mode, bus);
-                self.write(bus, addr, self.registers.accumulator);
+            OpcodeSyntax::BRK => {
+                self.registers.status.insert(Status::BRK);
             }
             _ => todo!(),
         }
@@ -90,8 +148,23 @@ impl CPU {
         let hi = self.fetch_byte(bus) as u16;
         (hi << 8) | lo
     }
-
-    fn get_operand_address(&mut self, mode: &AddressingMode, bus: &mut dyn Bus) -> u16 {
+    pub fn trace(&self) -> String {
+        format!(
+            "PC:{:04X} A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
+            self.registers.program_counter,
+            self.registers.accumulator,
+            self.registers.x_register,
+            self.registers.y_register,
+            self.registers.status.bits(), // Assuming 'bits()' returns the u8 value of flags
+            self.registers.stack_pointer
+        )
+    }
+    fn get_operand_address(
+        &mut self,
+        mode: &AddressingMode,
+        bus: &mut dyn Bus,
+        access_mode: AccessMode,
+    ) -> u16 {
         match mode {
             AddressingMode::Absolute => {
                 let addr = self.fetch_u16(bus);
@@ -100,8 +173,8 @@ impl CPU {
             AddressingMode::AbsoluteX => {
                 let base = self.fetch_u16(bus);
                 let addr = base.wrapping_add(self.registers.x_register as u16);
-
-                if (base & 0xFF00) != (addr & 0xFF00) {
+                let page_crossed = (base & 0xFF00) != (addr & 0xFF00);
+                if access_mode == AccessMode::Write || page_crossed {
                     // Crossing Page, Burn a cycle
                     let _ = self.read(bus, addr.wrapping_sub(0x0100));
                 }
@@ -111,8 +184,8 @@ impl CPU {
             AddressingMode::AbsoluteY => {
                 let base = self.fetch_u16(bus);
                 let addr = base.wrapping_add(self.registers.y_register as u16);
-
-                if (base & 0xFF00) != (addr & 0xFF00) {
+                let page_crossed = (base & 0xFF00) != (addr & 0xFF00);
+                if access_mode == AccessMode::Write || page_crossed {
                     // Crossing Page, Burn a cycle
                     let _ = self.read(bus, addr.wrapping_sub(0x0100));
                 }
@@ -123,6 +196,21 @@ impl CPU {
                 let addr = self.registers.program_counter;
                 self.registers.program_counter = self.registers.program_counter.wrapping_add(1);
                 addr
+            }
+            AddressingMode::Indirect => {
+                let ptr_addr = self.fetch_u16(bus);
+
+                // Handle 6502 page boundary bug
+                let lo = self.read(bus, ptr_addr) as u16;
+                let hi_addr = if (ptr_addr & 0x00FF) == 0x00FF {
+                    ptr_addr & 0xFF00 // Wrap back to e.g. $3000
+                } else {
+                    ptr_addr.wrapping_add(1)
+                };
+
+                let hi = self.read(bus, hi_addr) as u16;
+
+                (hi << 8) | lo
             }
             AddressingMode::IndirectX => {
                 let base = self.fetch_byte(bus);
@@ -143,8 +231,9 @@ impl CPU {
                 let hi = self.read(bus, ptr.wrapping_add(1) as u16) as u16;
                 let base_addr = (hi << 8) | lo;
                 let addr = base_addr.wrapping_add(self.registers.y_register as u16);
-
-                if (addr & 0xFF00) != (base_addr & 0xFF00) {
+                let page_crossed = (addr & 0xFF00) != (base_addr & 0xFF00);
+                if access_mode == AccessMode::Write || page_crossed {
+                    // Burn cycle
                     let _ = self.read(bus, addr.wrapping_sub(0x0100));
                 }
 
@@ -601,5 +690,89 @@ mod tests {
 
         assert_eq!(bus.read(0x1000), 0x55);
         assert_eq!(cpu.cycles, 4, "STA should take 4 cycles");
+    }
+
+    #[test]
+    fn test_jmp_indirect_bug() {
+        let mut bus = Memory::new();
+        let mut cpu = CPU::new();
+
+        bus.write(0x30FF, 0x00);
+        bus.write(0x3000, 0x80);
+
+        // JMP ($30FF)
+        bus.write(0x8000, 0x6C);
+        bus.write(0x8001, 0xFF);
+        bus.write(0x8002, 0x30);
+
+        cpu.registers.program_counter = 0x8000;
+        cpu.step(&mut bus);
+
+        assert_eq!(
+            cpu.registers.program_counter, 0x8000,
+            "PC should jump to $8000"
+        );
+    }
+
+    #[test]
+    fn test_jmp() {
+        let mut bus = Memory::new();
+        let mut cpu = CPU::new();
+
+        let program: Vec<u8> = vec![
+            0xA9, 0x01, // 8000: LDA #$01 (Value)
+            0x4C, 0x07, 0x80, // 8002: JMP $8007 (Target)
+            0xA9, 0xFF, // 8005: LDA #$FF (We should not load this value!!)
+            0x8D, 0x00, 0x00, // 8007: STA $0000 (Save Result)
+        ];
+
+        // load
+        for (i, &byte) in program.iter().enumerate() {
+            bus.write(0x8000 + i as u16, byte);
+        }
+
+        cpu.registers.program_counter = 0x8000;
+        cpu.cycles = 0;
+
+        cpu.step(&mut bus); // LDA: 2 cycles
+        cpu.step(&mut bus); // JMP: 3 cycles
+        cpu.step(&mut bus); // STA: 4 cycles (if the JMP worked properly)
+
+        assert_eq!(bus.read(0x0000), 0x01, "JMP failed!");
+        assert_eq!(cpu.cycles, 9);
+        assert_eq!(
+            cpu.registers.program_counter, 0x800A,
+            "PC ended up in the wrong place"
+        );
+    }
+
+    #[test]
+    fn test_register_transfers() {
+        let mut bus = Memory::new();
+        let mut cpu = CPU::new();
+
+        let test_program: Vec<u8> = vec![
+            0xA9, 0x42, // LDA #$42
+            0xAA, // TAX (X = 42)
+            0xA8, // TAY (Y = 42)
+            0x8E, 0x01, 0x00, // STX $0001
+            0x8C, 0x02, 0x00, // STY $0002
+        ];
+
+        // load
+        for (i, &byte) in test_program.iter().enumerate() {
+            bus.write(0x8000 + i as u16, byte);
+        }
+        cpu.registers.program_counter = 0x8000;
+
+        // run
+        for _ in 0..5 {
+            cpu.step(&mut bus);
+        }
+
+        assert_eq!(cpu.registers.x_register, 0x42);
+        assert_eq!(cpu.registers.y_register, 0x42);
+        assert_eq!(bus.read(0x0001), 0x42, "STX failed");
+        assert_eq!(bus.read(0x0002), 0x42, "STY failed");
     }
 }

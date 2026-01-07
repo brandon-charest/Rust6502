@@ -1,31 +1,39 @@
 mod hardware;
 use hardware::cpu::CPU;
 
-use crate::hardware::bus::{Bus, Memory};
+use crate::hardware::{
+    bus::{Bus, Memory},
+    status::{Status, StatusArgs},
+};
 
 fn main() {
     let mut cpu = CPU::new();
-    let mut memory = Memory::new();
-    memory.write(0x8000, 0xEA); // NOP
-    memory.write(0x8001, 0xEA); // NOP
-    memory.write(0x8002, 0xEA); // NOP
-    memory.write(0x8003, 0x00); //treat 0x00 as a BRK
+    let mut bus = Memory::new();
+    #[rustfmt::skip]
+    let program: Vec<u8> = vec![
+        0xA9, 0x01,        // 8000: LDA #$01   (Set A = 1)
+        0x4C, 0x07, 0x80,  // 8002: JMP $8007  (Jump over the next instruction)
+        0xA9, 0x00,        // 8005: LDA #$00   (TRAP! If we run this, JMP failed)
+        0xA9, 0xFF,        // 8007: LDA #$FF   (Success! Set A = 255)
+    ];
 
-    memory.write(0xFFFC, 0x00);
-    memory.write(0xFFFD, 0x80);
+    for (i, &byte) in program.iter().enumerate() {
+        bus.write(0x8000 + i as u16, byte);
+    }
+    bus.write(0xFFFC, 0x00);
+    bus.write(0xFFFD, 0x80);
+    cpu.reset(&mut bus);
 
-    cpu.reset(&mut memory);
     println!("--- Starting 6502 Emulation ---");
-    loop {
-        cpu.debug_info(&memory);
+    for _ in program.iter() {
+        cpu.debug_info(&mut bus);
 
-        let current_opcode = memory.read(cpu.registers.program_counter);
-        if current_opcode == 0x00 {
-            println!("BRK (0x00) detected. Halting.");
+        cpu.step(&mut bus);
+        if cpu.registers.status.contains(Status::BRK) {
+            println!("\n--- BRK Encountered! Execution Stopped. ---");
+            println!("Final Accumulator: {:02X} (Should be FF)", cpu.registers.accumulator);
             break;
         }
-
-        cpu.step(&mut memory);
     }
 
     println!("--- Emulation Finished ---");

@@ -1,0 +1,4 @@
+normalize_comments = false
+wrap_comments = false
+format_code_in_doc_comments = false
+use_small_heuristics = "Off"

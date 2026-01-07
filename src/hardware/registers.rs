@@ -7,7 +7,7 @@ pub struct Registers {
     pub y_register: u8,
     pub stack_pointer: u8,
     pub program_counter: u16,
-    pub status_register: Status,
+    pub status: Status,
 }
 
 impl Default for Registers {
@@ -25,7 +25,7 @@ impl Registers {
             y_register: 0,
             stack_pointer: 0xFD, // Standard start point
             program_counter: 0,
-            status_register: Status::default(),
+            status: Status::default(),
         }
     }
 }
@@ -42,11 +42,7 @@ mod tests {
         assert_eq!(registers.y_register, 0);
         assert_eq!(registers.stack_pointer, 0xFD);
         assert_eq!(registers.program_counter, 0);
-        assert!(
-            registers
-                .status_register
-                .contains(Status::DISABLE_INTERRUPTS)
-        );
+        assert!(registers.status.contains(Status::DISABLE_INTERRUPTS));
     }
 
     #[test]
@@ -57,10 +53,6 @@ mod tests {
         assert_eq!(registers.y_register, 0);
         assert_eq!(registers.stack_pointer, 0xFD);
         assert_eq!(registers.program_counter, 0);
-        assert!(
-            registers
-                .status_register
-                .contains(Status::DISABLE_INTERRUPTS)
-        );
+        assert!(registers.status.contains(Status::DISABLE_INTERRUPTS));
     }
 }

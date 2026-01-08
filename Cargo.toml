@@ -3,5 +3,9 @@ name = "rust-6502-emulator"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "rust_6502_emulator"
+path = "src/lib.rs"
+
 [dependencies]
 bitflags = "2.10.0"

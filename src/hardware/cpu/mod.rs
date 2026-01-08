@@ -1,6 +1,11 @@
+pub mod instructions;
 use crate::hardware::{
     bus::Bus,
-    instructions::{AddressingMode, Opcode, OpcodeSyntax},
+    cpu::instructions::{
+        arithmetic, branch, compare, control, flags, increment, load, logic, noop, shift, stack,
+        transfer,
+    },
+    opcodes::{AddressingMode, Opcode, OpcodeSyntax},
     status::Status,
 };
 
@@ -16,7 +21,7 @@ pub struct CPU {
 }
 
 #[derive(PartialEq, Eq)]
-enum AccessMode {
+pub(crate) enum AccessMode {
     Read,  // LDA, LDX, LDY, EOR, AND, ORA, ADC, SBC, CMP, BIT
     Write, // STA, STX, STY, INC, DEC, ASL, LSR, ROL, ROR
 }
@@ -29,14 +34,14 @@ impl CPU {
             halted: false,
         }
     }
-    #[inline]
-    pub fn read(&mut self, bus: &dyn Bus, addr: u16) -> u8 {
+    #[inline(always)]
+    pub(crate) fn read(&mut self, bus: &dyn Bus, addr: u16) -> u8 {
         self.cycles += 1;
         bus.read(addr)
     }
 
-    #[inline]
-    pub fn write(&mut self, bus: &mut dyn Bus, addr: u16, data: u8) {
+    #[inline(always)]
+    pub(crate) fn write(&mut self, bus: &mut dyn Bus, addr: u16, data: u8) {
         self.cycles += 1;
         bus.write(addr, data);
     }
@@ -48,285 +53,67 @@ impl CPU {
             .unwrap_or_else(|| panic!("Unknown opcode ${:02X} at PC=${:04X}", raw_data, pc_before));
 
         match opcode.syntax {
-            OpcodeSyntax::ADC => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.add_with_carry(value);
-            }
-            OpcodeSyntax::SBC => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
+            OpcodeSyntax::ADC => arithmetic::adc(self, bus, &opcode.mode),
+            OpcodeSyntax::SBC => arithmetic::sbc(self, bus, &opcode.mode),
 
-                // SBC is just ADC with the value inverted (One's Complement)
-                // The math A + !M + C handles this automatically.
-                self.add_with_carry(value ^ 0xFF);
-            }
-            OpcodeSyntax::EOR => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
+            OpcodeSyntax::DEX => increment::dex(self),
+            OpcodeSyntax::DEY => increment::dey(self),
+            OpcodeSyntax::INX => increment::inx(self),
+            OpcodeSyntax::INY => increment::iny(self),
 
-                // Perform Bitwise XOR
-                self.registers.accumulator ^= value;
+            OpcodeSyntax::AND => logic::and(self, bus, &opcode.mode),
+            OpcodeSyntax::ORA => logic::ora(self, bus, &opcode.mode),
+            OpcodeSyntax::EOR => logic::eor(self, bus, &opcode.mode),
+            OpcodeSyntax::BIT => logic::bit(self, bus, &opcode.mode),
 
-                // Update Flags
-                self.update_nz_flags(self.registers.accumulator);
-            }
-            OpcodeSyntax::AND => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
+            OpcodeSyntax::CLC => flags::clc(self),
+            OpcodeSyntax::CLD => flags::cld(self),
+            OpcodeSyntax::CLI => flags::cli(self),
+            OpcodeSyntax::CLV => flags::clv(self),
+            OpcodeSyntax::SEC => flags::sec(self),
+            OpcodeSyntax::SED => flags::sed(self),
+            OpcodeSyntax::SEI => flags::sei(self),
 
-                // Perform Bitwise AND
-                self.registers.accumulator &= value;
+            OpcodeSyntax::BCC => branch::bcc(self, bus),
+            OpcodeSyntax::BCS => branch::bcs(self, bus),
+            OpcodeSyntax::BEQ => branch::beq(self, bus),
+            OpcodeSyntax::BMI => branch::bmi(self, bus),
+            OpcodeSyntax::BNE => branch::bne(self, bus),
+            OpcodeSyntax::BPL => branch::bpl(self, bus),
+            OpcodeSyntax::BVS => branch::bvs(self, bus),
+            OpcodeSyntax::BVC => branch::bvc(self, bus),
 
-                // Update Flags
-                self.update_nz_flags(self.registers.accumulator);
-            }
-            OpcodeSyntax::ORA => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
+            OpcodeSyntax::CMP => compare::cmp(self, bus, &opcode.mode),
+            OpcodeSyntax::CPX => compare::cpx(self, bus, &opcode.mode),
+            OpcodeSyntax::CPY => compare::cpy(self, bus, &opcode.mode),
 
-                // Perform Bitwise OR
-                self.registers.accumulator |= value;
-
-                // Update Flags
-                self.update_nz_flags(self.registers.accumulator);
-            }
-            // Branch Not Equal
-            OpcodeSyntax::BNE => {
-                let condition = !self.registers.status.contains(Status::ZERO);
-                self.branch(bus, condition);
-            }
-            // Branch Equal
-            OpcodeSyntax::BEQ => {
-                let condition = self.registers.status.contains(Status::ZERO);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::BCC => {
-                let condition = !self.registers.status.contains(Status::CARRY);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::BCS => {
-                let condition = self.registers.status.contains(Status::CARRY);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::BVC => {
-                let condition = !self.registers.status.contains(Status::OVERFLOW);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::BVS => {
-                let condition = self.registers.status.contains(Status::OVERFLOW);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::BPL => {
-                let condition = !self.registers.status.contains(Status::NEGATIVE);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::BMI => {
-                let condition = self.registers.status.contains(Status::NEGATIVE);
-                self.branch(bus, condition);
-            }
-            OpcodeSyntax::DEX => {
-                self.registers.x_register = self.registers.x_register.wrapping_sub(1);
-                self.update_nz_flags(self.registers.x_register);
-            }
-            OpcodeSyntax::DEY => {
-                self.registers.y_register = self.registers.y_register.wrapping_sub(1);
-                self.update_nz_flags(self.registers.y_register);
-            }
-            // Clear Carry
-            OpcodeSyntax::CLC => {
-                self.registers.status.remove(Status::CARRY);
-            }
-            // Clear Decimal Mode
-            OpcodeSyntax::CLD => {
-                self.registers.status.remove(Status::DECIMAL_MODE);
-            }
-            // Clear Interrupt Disable
-            OpcodeSyntax::CLI => {
-                self.registers.status.remove(Status::DISABLE_INTERRUPTS);
-            }
-            // Clear Overflow
-            OpcodeSyntax::CLV => {
-                self.registers.status.remove(Status::OVERFLOW);
-            }
-            // Set Carry
-            OpcodeSyntax::SEC => {
-                self.registers.status.insert(Status::CARRY);
-            }
-            // Set Decimal Mode
-            OpcodeSyntax::SED => {
-                self.registers.status.insert(Status::DECIMAL_MODE);
-            }
-            // Set Interrupt Disable
-            OpcodeSyntax::SEI => {
-                self.registers.status.insert(Status::DISABLE_INTERRUPTS);
-            }
-            OpcodeSyntax::CMP => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.compare(self.registers.accumulator, value);
-            }
-            OpcodeSyntax::BIT => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                let memory_flags = Status::from_bits_truncate(value);
-
-                // Zero Flag: (A & M) == 0
-                let result = self.registers.accumulator & value;
-                self.registers.status.set(Status::ZERO, result == 0);
-
-                // Negative Flag: Copy bit 7 of memory value
-                self.registers
-                    .status
-                    .set(Status::NEGATIVE, memory_flags.contains(Status::NEGATIVE));
-
-                // Overflow Flag: Copy bit 6 of memory value
-                self.registers
-                    .status
-                    .set(Status::OVERFLOW, memory_flags.contains(Status::OVERFLOW));
-            }
-            OpcodeSyntax::CPX => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.compare(self.registers.x_register, value);
-            }
-            OpcodeSyntax::CPY => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.compare(self.registers.y_register, value);
-            }
-            OpcodeSyntax::INX => {
-                self.registers.x_register = self.registers.x_register.wrapping_add(1);
-                self.update_nz_flags(self.registers.x_register);
-            }
-            OpcodeSyntax::INY => {
-                self.registers.y_register = self.registers.y_register.wrapping_add(1);
-                self.update_nz_flags(self.registers.y_register);
-            }
             // ===== LOAD/STORE =====
-            OpcodeSyntax::LDA => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.registers.accumulator = value;
-                self.update_nz_flags(value);
-            }
-            OpcodeSyntax::LDX => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.registers.x_register = value;
-                self.update_nz_flags(value);
-            }
-            OpcodeSyntax::LDY => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let value = self.read(bus, addr);
-                self.registers.y_register = value;
-                self.update_nz_flags(value);
-            }
-            OpcodeSyntax::STA => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Write);
-                self.write(bus, addr, self.registers.accumulator);
-            }
-            OpcodeSyntax::STX => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Write);
-                self.write(bus, addr, self.registers.x_register);
-            }
-            OpcodeSyntax::STY => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Write);
-                self.write(bus, addr, self.registers.y_register);
-            }
-            // TAX (Transfer Accumulator -> X)
-            OpcodeSyntax::TAX => {
-                self.registers.x_register = self.registers.accumulator;
-                self.update_nz_flags(self.registers.x_register);
-            }
-            // TAY (Transfer Accumulator -> Y)
-            OpcodeSyntax::TAY => {
-                self.registers.y_register = self.registers.accumulator;
-                self.update_nz_flags(self.registers.y_register);
-            }
-            // TXA (Transfer X -> Accumulator)
-            OpcodeSyntax::TXA => {
-                self.registers.accumulator = self.registers.x_register;
-                self.update_nz_flags(self.registers.accumulator);
-            }
-            // TYA (Transfer Y -> Accumulator)
-            OpcodeSyntax::TYA => {
-                self.registers.accumulator = self.registers.y_register;
-                self.update_nz_flags(self.registers.accumulator);
-            }
-            // TXS (Transfer X -> Stack Pointer)
-            OpcodeSyntax::TXS => {
-                self.registers.stack_pointer = self.registers.x_register;
-                // DO NOT UPDATE FLAGS
-            }
+            OpcodeSyntax::LDA => load::lda(self, bus, &opcode.mode),
+            OpcodeSyntax::LDX => load::ldx(self, bus, &opcode.mode),
+            OpcodeSyntax::LDY => load::ldy(self, bus, &opcode.mode),
+            OpcodeSyntax::STA => load::sta(self, bus, &opcode.mode),
+            OpcodeSyntax::STX => load::stx(self, bus, &opcode.mode),
+            OpcodeSyntax::STY => load::sty(self, bus, &opcode.mode),
+            OpcodeSyntax::TAX => transfer::tax(self),
+            OpcodeSyntax::TAY => transfer::tay(self),
+            OpcodeSyntax::TSX => transfer::tsx(self),
+            OpcodeSyntax::TXA => transfer::txa(self),
+            OpcodeSyntax::TXS => transfer::txs(self),
+            OpcodeSyntax::TYA => transfer::tya(self),
             // (PusH Accumulator)
-            OpcodeSyntax::PHA => {
-                self.push(bus, self.registers.accumulator);
-            }
-            // (PusH Processor status)
-            OpcodeSyntax::PHP => {
-                let mut flags = self.registers.status;
-                flags.set(Status::BRK, true);
-                flags.set(Status::UNUSED, true);
-                self.push(bus, flags.bits());
-            }
-            OpcodeSyntax::PLA => {
-                let popped_byte = self.pop(bus);
-                self.registers.accumulator = popped_byte;
-                self.update_nz_flags(popped_byte);
-            }
-            OpcodeSyntax::PLP => {
-                let popped_byte = self.pop(bus);
-                let mut new_status = Status::from_bits_truncate(popped_byte);
-                new_status.remove(Status::BRK);
-                new_status.insert(Status::UNUSED);
-                self.registers.status = new_status;
-            }
-            // TSX (Transfer Stack Pointer -> X)
-            OpcodeSyntax::TSX => {
-                self.registers.x_register = self.registers.stack_pointer;
-                self.update_nz_flags(self.registers.x_register);
-            }
-            OpcodeSyntax::JMP => {
-                let addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                self.registers.program_counter = addr;
-            }
-            OpcodeSyntax::JSR => {
-                let target_addr = self.get_operand_address(&opcode.mode, bus, AccessMode::Read);
-                let return_addr = self.registers.program_counter.wrapping_sub(1);
-                self.push_u16(bus, return_addr);
-                self.registers.program_counter = target_addr;
-            }
-            OpcodeSyntax::RTS => {
-                let return_addr = self.pop_u16(bus);
-                self.registers.program_counter = return_addr.wrapping_add(1);
-            }
-            OpcodeSyntax::NOP => {
-                let _ = self.read(bus, self.registers.program_counter);
-            }
-            OpcodeSyntax::BRK => {
-                let _ = self.fetch_byte(bus);
-                self.push_u16(bus, self.registers.program_counter);
-                let mut flags = self.registers.status.bits();
-                flags |= 0x30;
-                self.push(bus, flags);
-                self.registers.status.insert(Status::DISABLE_INTERRUPTS);
+            OpcodeSyntax::PHA => stack::pha(self, bus),
+            OpcodeSyntax::PHP => stack::php(self, bus),
+            OpcodeSyntax::PLA => stack::pla(self, bus),
+            OpcodeSyntax::PLP => stack::plp(self, bus),
 
-                self.registers.program_counter = self.read_u16(bus, 0xFFFE);
-            }
-            OpcodeSyntax::RTI => {
-                // Even though RTI implies no operand, the CPU reads the PC anyway.
-                let _ = self.read(bus, self.registers.program_counter);
-                // The CPU reads the current stack address while the SP increments.
-                let _ = self.read(bus, 0x0100 + self.registers.stack_pointer as u16);
-                let popped_flags = self.pop(bus);
-                let mut new_status = Status::from_bits_truncate(popped_flags);
-                new_status.remove(Status::BRK);
-                new_status.insert(Status::UNUSED);
-                self.registers.status = new_status;
+            OpcodeSyntax::BRK => control::brk(self, bus),
+            OpcodeSyntax::JMP => control::jmp(self, bus, &opcode.mode),
+            OpcodeSyntax::JSR => control::jsr(self, bus, &opcode.mode),
+            OpcodeSyntax::RTS => control::rts(self, bus),
+            OpcodeSyntax::RTI => control::rti(self, bus),
 
-                self.registers.program_counter = self.pop_u16(bus);
-            }
+            OpcodeSyntax::NOP => noop::noop(self, bus),
+
             _ => panic!(
                 "Unimplemented opcode: ${:02X} ({:?} {:?}) at PC=${:04X}",
                 raw_data, opcode.syntax, opcode.mode, pc_before
@@ -372,7 +159,7 @@ impl CPU {
             self.registers.stack_pointer
         )
     }
-    fn get_operand_address(
+    pub(crate) fn get_operand_address(
         &mut self,
         mode: &AddressingMode,
         bus: &mut dyn Bus,
@@ -478,101 +265,19 @@ impl CPU {
         }
     }
 
-    fn push(&mut self, bus: &mut dyn Bus, data: u8) {
+    pub(crate) fn push(&mut self, bus: &mut dyn Bus, data: u8) {
         self.write(bus, 0x0100 + self.registers.stack_pointer as u16, data);
         self.registers.stack_pointer = self.registers.stack_pointer.wrapping_sub(1);
     }
 
-    fn push_u16(&mut self, bus: &mut dyn Bus, data: u16) {
-        let hi = (data >> 8) as u8;
-        let lo = (data & 0xff) as u8;
-        self.push(bus, hi);
-        self.push(bus, lo);
-    }
-
-    fn pop_u16(&mut self, bus: &mut dyn Bus) -> u16 {
-        let lo = self.pop(bus) as u16;
-        let hi = self.pop(bus) as u16;
-        (hi << 8) | lo
-    }
-
-    fn pop(&mut self, bus: &mut dyn Bus) -> u8 {
+    pub(crate) fn pop(&mut self, bus: &mut dyn Bus) -> u8 {
         self.registers.stack_pointer = self.registers.stack_pointer.wrapping_add(1);
         self.read(bus, 0x0100 + self.registers.stack_pointer as u16)
     }
 
-    fn update_nz_flags(&mut self, value: u8) {
+    pub(crate) fn update_nz_flags(&mut self, value: u8) {
         self.registers.status.set(Status::ZERO, value == 0);
         self.registers.status.set(Status::NEGATIVE, (value & 0x80) != 0);
-    }
-
-    fn branch(&mut self, bus: &mut dyn Bus, condition: bool) {
-        // Read the signed offset byte
-        let offset = self.fetch_byte(bus) as i8;
-
-        if condition {
-            // Calculate target address using signed offset
-            // PC is already at the next instruction after the offset byte
-            let jump_addr = self.registers.program_counter.wrapping_add_signed(offset as i16);
-
-            // Cycles: Branch Taken (+1)
-            let _ = self.read(bus, self.registers.program_counter);
-
-            // Cycles: Page Crossing (+1)
-            if (self.registers.program_counter & 0xFF00) != (jump_addr & 0xFF00) {
-                let _ = self.read(bus, jump_addr.wrapping_sub(0x0100)); // Burn cycle
-            }
-
-            // Update PC
-            self.registers.program_counter = jump_addr;
-        }
-        // If false: We already incremented PC via fetch_byte
-    }
-
-    fn compare(&mut self, register: u8, memory: u8) {
-        // Calculate the result (Register - Memory)
-        let (result, _) = register.overflowing_sub(memory);
-
-        // Update Zero and Negative flags based on the Result
-        self.update_nz_flags(result);
-
-        // Update Carry Flag: Set if Register >= Memory
-        if register >= memory {
-            self.registers.status.insert(Status::CARRY);
-        } else {
-            self.registers.status.remove(Status::CARRY);
-        }
-    }
-    // Sum = A + M + C
-    fn add_with_carry(&mut self, memory_val: u8) {
-        let a = self.registers.accumulator as u16;
-        let m = memory_val as u16;
-        let c = if self.registers.status.contains(Status::CARRY) {
-            1
-        } else {
-            0
-        };
-
-        let sum = a + m + c;
-
-        if sum > 0xFF {
-            self.registers.status.insert(Status::CARRY);
-        } else {
-            self.registers.status.remove(Status::CARRY);
-        }
-
-        let result = sum as u8;
-        let overflow = (a ^ sum) & (m ^ sum) & 0x0080;
-
-        if overflow != 0 {
-            self.registers.status.insert(Status::OVERFLOW);
-        } else {
-            self.registers.status.remove(Status::OVERFLOW);
-        }
-
-        // 4. Save Result and Update N/Z
-        self.registers.accumulator = result;
-        self.update_nz_flags(result);
     }
 
     pub fn debug_info(&self, bus: &dyn Bus) {

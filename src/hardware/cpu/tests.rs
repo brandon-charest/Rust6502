@@ -341,7 +341,7 @@ fn test_lda_indirect_x_zp_wrap_torture() {
     let mut bus = Memory::new();
     let mut cpu = CPU::new();
 
-    // 1. Set X to a value that forces the pointer to $FF
+    // Set X to a value that forces the pointer to $FF
     // Base ($F0) + X ($0F) = $FF
     cpu.registers.x_register = 0x0F;
 
@@ -350,7 +350,7 @@ fn test_lda_indirect_x_zp_wrap_torture() {
     bus.write(0x8000, 0xA1);
     bus.write(0x8001, 0xF0);
 
-    // 2. POINTER SETUP (The Wrap)
+    // POINTER SETUP (The Wrap)
     // We want to point to address $4000 (Safe location)
     // Low Byte ($00) goes to $00FF
     bus.write(0x00FF, 0x00);
@@ -360,7 +360,7 @@ fn test_lda_indirect_x_zp_wrap_torture() {
     // If CPU does not wrap, it reads High Byte from $0100.
     bus.write(0x0100, 0x99);
 
-    // 4. DATA
+    //   DATA
     // Put the value at $4000
     bus.write(0x4000, 0x42);
 

@@ -9,7 +9,7 @@ use crate::hardware::{
 fn main() {
     let mut cpu = CPU::new();
     let mut bus = Memory::new();
-    
+
     #[rustfmt::skip]
     let program: Vec<u8> = vec![
         0xA9, 0x01,        // 8000: LDA #$01   (Set A = 1)

@@ -60,6 +60,8 @@ impl CPU {
             OpcodeSyntax::DEY => increment::dey(self),
             OpcodeSyntax::INX => increment::inx(self),
             OpcodeSyntax::INY => increment::iny(self),
+            OpcodeSyntax::INC => increment::inc(self, bus, &opcode.mode),
+            OpcodeSyntax::DEC => increment::dec(self, bus, &opcode.mode),
 
             OpcodeSyntax::AND => logic::and(self, bus, &opcode.mode),
             OpcodeSyntax::ORA => logic::ora(self, bus, &opcode.mode),
@@ -112,6 +114,11 @@ impl CPU {
             OpcodeSyntax::RTS => control::rts(self, bus),
             OpcodeSyntax::RTI => control::rti(self, bus),
 
+            OpcodeSyntax::ASL => shift::asl(self, bus, &opcode.mode),
+            OpcodeSyntax::LSR => shift::lsr(self, bus, &opcode.mode),
+            OpcodeSyntax::ROL => shift::rol(self, bus, &opcode.mode),
+            OpcodeSyntax::ROR => shift::ror(self, bus, &opcode.mode),
+
             OpcodeSyntax::NOP => noop::noop(self, bus),
 
             _ => panic!(
@@ -148,17 +155,7 @@ impl CPU {
         let hi = self.fetch_byte(bus) as u16;
         (hi << 8) | lo
     }
-    pub fn trace(&self) -> String {
-        format!(
-            "PC:{:04X} A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
-            self.registers.program_counter,
-            self.registers.accumulator,
-            self.registers.x_register,
-            self.registers.y_register,
-            self.registers.status.bits(), // Assuming 'bits()' returns the u8 value of flags
-            self.registers.stack_pointer
-        )
-    }
+
     pub(crate) fn get_operand_address(
         &mut self,
         mode: &AddressingMode,
@@ -278,6 +275,19 @@ impl CPU {
     pub(crate) fn update_nz_flags(&mut self, value: u8) {
         self.registers.status.set(Status::ZERO, value == 0);
         self.registers.status.set(Status::NEGATIVE, (value & 0x80) != 0);
+    }
+
+    pub fn trace(&self) -> String {
+        format!(
+            "{:04X} A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{}",
+            self.registers.program_counter,
+            self.registers.accumulator,
+            self.registers.x_register,
+            self.registers.y_register,
+            self.registers.status.bits(),
+            self.registers.stack_pointer,
+            self.cycles
+        )
     }
 
     pub fn debug_info(&self, bus: &dyn Bus) {

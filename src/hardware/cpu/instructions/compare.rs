@@ -19,13 +19,8 @@ pub fn cpy(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {
 }
 
 fn compare(cpu: &mut CPU, register: u8, memory: u8) {
-    // Calculate the result (Register - Memory)
     let (result, _) = register.overflowing_sub(memory);
-
-    // Update Zero and Negative flags based on the Result
     cpu.update_nz_flags(result);
-
-    // Update Carry Flag: Set if Register >= Memory
     if register >= memory {
         cpu.registers.status.insert(Status::CARRY);
     } else {

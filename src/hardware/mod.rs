@@ -1,5 +1,5 @@
 pub mod bus;
 pub mod cpu;
-pub mod instructions;
+pub mod opcodes;
 pub mod registers;
 pub mod status;

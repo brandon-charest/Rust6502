@@ -1,0 +1,12 @@
+pub mod arithmetic;
+pub mod branch;
+pub mod compare;
+pub mod control;
+pub mod flags;
+pub mod increment;
+pub mod load;
+pub mod logic;
+pub mod noop;
+pub mod shift;
+pub mod stack;
+pub mod transfer;

@@ -1,4 +1,5 @@
 pub mod addressing;
+pub mod disassembler;
 pub mod instructions;
 pub mod memory_access;
 use crate::hardware::{
@@ -139,10 +140,32 @@ impl CPU {
         self.registers.status.set(Status::NEGATIVE, (value & 0x80) != 0);
     }
 
-    pub fn trace(&self) -> String {
+    pub fn trace(&mut self, bus: &mut dyn Bus) -> String {
+        let pc = self.registers.program_counter;
+        let opcode_byte = bus.read(pc); // Don't use self.read to avoid cycle count
+        let opcode = match Opcode::from_u8(opcode_byte) {
+            Some(op) => op,
+            None => return format!("{:04X}  {:02X}        UNKNOWN", pc, opcode_byte),
+        };
+
+        let mut raw_bytes = vec![opcode_byte];
+        for i in 1..opcode.bytes {
+            raw_bytes.push(bus.read(pc + i as u16));
+        }
+        let hex_dump =
+            raw_bytes.iter().map(|b| format!("{:02X}", b)).collect::<Vec<String>>().join(" ");
+
+        let asm = disassembler::disassemble_instruction(&opcode, &raw_bytes, pc);
+        if asm.contains("BNE") || asm.contains("BEQ") {
+            println!("{:04X}: {} <--- BRANCH TARGET", pc, asm);
+        } else {
+            println!("{:04X}: {}", pc, asm);
+        }
         format!(
-            "{:04X} A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{}",
-            self.registers.program_counter,
+            "{:04X}  {: <9} {: <15} A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{}",
+            pc,
+            hex_dump,
+            asm,
             self.registers.accumulator,
             self.registers.x_register,
             self.registers.y_register,

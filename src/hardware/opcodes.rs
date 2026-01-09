@@ -4,9 +4,11 @@ pub enum OpcodeSyntax {
     LDA,
     LDX,
     LDY,
+    LAX,
     STA,
     STX,
     STY,
+    SAX,
     // Transfer
     TAX,
     TXA,
@@ -23,6 +25,7 @@ pub enum OpcodeSyntax {
     DEC,
     DEX,
     DEY,
+    DCP,
     // Logical
     AND,
     ORA,
@@ -32,6 +35,7 @@ pub enum OpcodeSyntax {
     LSR,
     ROL,
     ROR,
+    RLA,
     // Compare
     CMP,
     CPX,
@@ -67,6 +71,7 @@ pub enum OpcodeSyntax {
     // Control
     NOP,
     BRK,
+    KIL,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -1206,6 +1211,7 @@ impl Opcode {
                 bytes: 1,
                 cycles: 2,
             }),
+
             0x00 => Some(Opcode {
                 code: 0x00,
                 syntax: OpcodeSyntax::BRK,
@@ -1214,6 +1220,248 @@ impl Opcode {
                 cycles: 7,
             }),
 
+            // ==== UNOFFICIAL OPCODES ====
+
+            // ==== NO OP ====
+            0x1A | 0x3A | 0x5A | 0x7A | 0xDA | 0xFA => Some(Opcode {
+                code: code,
+                syntax: OpcodeSyntax::NOP,
+                mode: AddressingMode::Implied,
+                bytes: 1,
+                cycles: 2,
+            }),
+
+            0x80 | 0x82 | 0x89 | 0xC2 | 0xE2 => Some(Opcode {
+                code: code,
+                syntax: OpcodeSyntax::NOP,
+                mode: AddressingMode::Immediate,
+                bytes: 2,
+                cycles: 2,
+            }),
+
+            0x04 | 0x44 | 0x64 => Some(Opcode {
+                code: code,
+                syntax: OpcodeSyntax::NOP,
+                mode: AddressingMode::ZeroPage,
+                bytes: 2,
+                cycles: 3,
+            }),
+            0x14 | 0x34 | 0x54 | 0x74 | 0xD4 | 0xF4 => Some(Opcode {
+                code: code,
+                syntax: OpcodeSyntax::NOP,
+                mode: AddressingMode::ZeroPageX,
+                bytes: 2,
+                cycles: 4,
+            }),
+            0x0C => Some(Opcode {
+                code: 0x0C,
+                syntax: OpcodeSyntax::NOP,
+                mode: AddressingMode::Absolute,
+                bytes: 3,
+                cycles: 4,
+            }),
+
+            0x1C | 0x3C | 0x5C | 0x7C | 0xDC | 0xFC => Some(Opcode {
+                code: code,
+                syntax: OpcodeSyntax::NOP,
+                mode: AddressingMode::AbsoluteX,
+                bytes: 3,
+                cycles: 4,
+            }),
+
+            // ==== LOAD ====
+            0xA3 => Some(Opcode {
+                code: 0xA3,
+                syntax: OpcodeSyntax::LAX,
+                mode: AddressingMode::IndirectX,
+                bytes: 2,
+                cycles: 6,
+            }),
+            0xB3 => Some(Opcode {
+                code: 0xB3,
+                syntax: OpcodeSyntax::LAX,
+                mode: AddressingMode::ZeroPageY,
+                bytes: 2,
+                cycles: 5,
+            }),
+            0xA7 => Some(Opcode {
+                code: 0xA7,
+                syntax: OpcodeSyntax::LAX,
+                mode: AddressingMode::ZeroPage,
+                bytes: 2,
+                cycles: 3,
+            }),
+            0xB7 => Some(Opcode {
+                code: 0xB7,
+                syntax: OpcodeSyntax::LAX,
+                mode: AddressingMode::ZeroPageY,
+                bytes: 2,
+                cycles: 4,
+            }),
+            0xAF => Some(Opcode {
+                code: 0xAF,
+                syntax: OpcodeSyntax::LAX,
+                mode: AddressingMode::Absolute,
+                bytes: 3,
+                cycles: 4,
+            }),
+            0xBF => Some(Opcode {
+                code: 0xBF,
+                syntax: OpcodeSyntax::LAX,
+                mode: AddressingMode::AbsoluteY,
+                bytes: 3,
+                cycles: 4,
+            }),
+            0x87 => Some(Opcode {
+                code: 0x87,
+                syntax: OpcodeSyntax::SAX,
+                mode: AddressingMode::ZeroPage,
+                bytes: 2,
+                cycles: 3,
+            }),
+            0x97 => Some(Opcode {
+                code: 0x97,
+                syntax: OpcodeSyntax::SAX,
+                mode: AddressingMode::ZeroPageY,
+                bytes: 2,
+                cycles: 4,
+            }),
+            0x8F => Some(Opcode {
+                code: 0x8F,
+                syntax: OpcodeSyntax::SAX,
+                mode: AddressingMode::Absolute,
+                bytes: 3,
+                cycles: 4,
+            }),
+            0x83 => Some(Opcode {
+                code: 0x83,
+                syntax: OpcodeSyntax::SAX,
+                mode: AddressingMode::AbsoluteY,
+                bytes: 3,
+                cycles: 6,
+            }),
+
+            0xEB => Some(Opcode {
+                code: 0xEB,
+                syntax: OpcodeSyntax::SBC,
+                mode: AddressingMode::Immediate,
+                bytes: 2,
+                cycles: 2,
+            }),
+
+            0xC7 => Some(Opcode {
+                code: 0xC7,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::ZeroPage,
+                bytes: 2,
+                cycles: 5,
+            }),
+            0xD7 => Some(Opcode {
+                code: 0xD7,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::ZeroPageX,
+                bytes: 2,
+                cycles: 6,
+            }),
+            0xCF => Some(Opcode {
+                code: 0xCF,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::Absolute,
+                bytes: 3,
+                cycles: 6,
+            }),
+            0xDF => Some(Opcode {
+                code: 0xDF,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::AbsoluteX,
+                bytes: 3,
+                cycles: 7,
+            }),
+            0xDB => Some(Opcode {
+                code: 0xDB,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::AbsoluteY,
+                bytes: 3,
+                cycles: 7,
+            }),
+            0xC3 => Some(Opcode {
+                code: 0xC3,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::IndirectX,
+                bytes: 2,
+                cycles: 8,
+            }),
+            0xD3 => Some(Opcode {
+                code: 0xD3,
+                syntax: OpcodeSyntax::DCP,
+                mode: AddressingMode::IndirectY,
+                bytes: 2,
+                cycles: 8,
+            }),
+
+            0x27 => Some(Opcode {
+                code: 0x27,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::ZeroPage,
+                bytes: 2,
+                cycles: 5,
+            }),
+            0x37 => Some(Opcode {
+                code: 0x37,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::ZeroPageX,
+                bytes: 2,
+                cycles: 6,
+            }),
+
+            0x2F => Some(Opcode {
+                code: 0x2F,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::Absolute,
+                bytes: 3,
+                cycles: 6,
+            }),
+            0x3F => Some(Opcode {
+                code: 0x3F,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::AbsoluteX,
+                bytes: 3,
+                cycles: 7,
+            }),
+            0x3B => Some(Opcode {
+                code: 0x3B,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::AbsoluteY,
+                bytes: 3,
+                cycles: 7,
+            }),
+
+            0x23 => Some(Opcode {
+                code: 0x23,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::IndirectX,
+                bytes: 2,
+                cycles: 8,
+            }),
+
+            0x33 => Some(Opcode {
+                code: 0x33,
+                syntax: OpcodeSyntax::RLA,
+                mode: AddressingMode::IndirectY,
+                bytes: 2,
+                cycles: 8,
+            }),
+
+            // KIL / JAM (Halt CPU)
+            0x02 | 0x12 | 0x22 | 0x32 | 0x42 | 0x52 | 0x62 | 0x72 | 0x92 | 0xB2 | 0xD2 | 0xF2 => {
+                Some(Opcode {
+                    code: code,
+                    syntax: OpcodeSyntax::KIL,
+                    mode: AddressingMode::Implied, // It doesn't really matter, it just dies
+                    bytes: 1,
+                    cycles: 0,
+                })
+            }
             _ => None,
         }
     }

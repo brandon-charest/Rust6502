@@ -1,5 +1,5 @@
 use crate::hardware::{
-    cpu::{AccessMode, Bus, CPU, Status},
+    cpu::{Bus, CPU, Status, addressing::AccessMode},
     opcodes::AddressingMode,
 };
 
@@ -11,7 +11,7 @@ pub fn brk(cpu: &mut CPU, bus: &mut dyn Bus) {
     cpu.push(bus, flags);
     cpu.registers.status.insert(Status::DISABLE_INTERRUPTS);
 
-    cpu.registers.program_counter = cpu.read_u16(bus, 0xFFFE);
+    cpu.registers.program_counter = cpu.read_word(bus, 0xFFFE);
 }
 
 pub fn jmp(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {

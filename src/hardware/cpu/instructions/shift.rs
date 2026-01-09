@@ -1,6 +1,6 @@
 use crate::hardware::{
     bus::Bus,
-    cpu::{AccessMode, AddressingMode, CPU},
+    cpu::{AddressingMode, CPU, addressing::AccessMode},
     status::Status,
 };
 

@@ -1,5 +1,5 @@
 use crate::hardware::{
-    cpu::{AccessMode, AddressingMode, Bus, CPU},
+    cpu::{AddressingMode, Bus, CPU, addressing::AccessMode},
     status::Status,
 };
 

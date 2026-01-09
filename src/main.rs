@@ -3,7 +3,7 @@ use hardware::cpu::CPU;
 
 use crate::hardware::{
     bus::{Bus, Memory},
-    status::{Status, StatusArgs},
+    status::Status,
 };
 
 fn main() {

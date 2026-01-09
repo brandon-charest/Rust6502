@@ -1,7 +1,8 @@
 use crate::hardware::{
     bus::Bus,
-    cpu::{AccessMode, AddressingMode, CPU},
+    cpu::{AddressingMode, CPU, addressing::AccessMode},
 };
+
 pub fn dex(cpu: &mut CPU) {
     cpu.registers.x_register = cpu.registers.x_register.wrapping_sub(1);
     cpu.update_nz_flags(cpu.registers.x_register);
@@ -37,6 +38,7 @@ pub fn dec(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {
     let addr = cpu.get_operand_address(mode, bus, AccessMode::Write);
     let mut value = cpu.read(bus, addr);
 
+    cpu.write(bus, addr, value);
     value = value.wrapping_sub(1);
     cpu.write(bus, addr, value);
 

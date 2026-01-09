@@ -1,4 +1,4 @@
-use crate::hardware::cpu::{AccessMode, Bus, CPU};
+use crate::hardware::cpu::{Bus, CPU, addressing::AccessMode};
 use crate::hardware::opcodes::AddressingMode;
 
 pub fn lda(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {

@@ -23,12 +23,12 @@ impl Memory {
 }
 
 pub trait Bus {
-    fn read(&self, address: u16) -> u8;
+    fn read(&mut self, address: u16) -> u8;
     fn write(&mut self, address: u16, value: u8);
 }
 
 impl Bus for Memory {
-    fn read(&self, address: u16) -> u8 {
+    fn read(&mut self, address: u16) -> u8 {
         self.bytes[address as usize]
     }
 
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_default_trait() {
-        let mem = Memory::default();
+        let mut mem = Memory::default();
         assert_eq!(mem.read(0x0000), 0);
     }
 }

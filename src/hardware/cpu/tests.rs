@@ -33,7 +33,7 @@ fn test_cpu_reset() {
 
 #[test]
 fn test_fetch_byte() {
-    let mut bus = Memory::new();
+    let bus = &mut Memory::new();
     let mut cpu = CPU::new();
 
     // Put an opcode at 0x8000
@@ -41,7 +41,7 @@ fn test_fetch_byte() {
     cpu.registers.program_counter = pc_start;
     bus.write(pc_start, 0xEA); // NOP instruction
 
-    let opcode = cpu.fetch_byte(&mut bus);
+    let opcode = cpu.fetch_byte(bus);
 
     assert_eq!(opcode, 0xEA);
     assert_eq!(cpu.registers.program_counter, pc_start + 1);
@@ -55,7 +55,7 @@ fn test_fetch_u16() {
     bus.write(0x2000, 0x34);
     bus.write(0x2001, 0x12);
 
-    let value = cpu.read_u16(&mut bus, 0x2000);
+    let value = cpu.read_word(&mut bus, 0x2000);
 
     assert_eq!(value, 0x1234);
 }
@@ -68,7 +68,7 @@ fn test_fetch_u16_wrapping() {
     bus.write(0xFFFF, 0xAA);
     bus.write(0x0000, 0xBB);
 
-    let value = cpu.read_u16(&mut bus, 0xFFFF);
+    let value = cpu.read_word(&mut bus, 0xFFFF);
 
     assert_eq!(value, 0xBBAA);
 }

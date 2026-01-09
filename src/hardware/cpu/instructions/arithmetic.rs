@@ -1,5 +1,5 @@
 use crate::hardware::bus::Bus;
-use crate::hardware::cpu::{AccessMode, CPU, Status};
+use crate::hardware::cpu::{CPU, Status, addressing::AccessMode};
 use crate::hardware::opcodes::AddressingMode;
 
 pub fn adc(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {

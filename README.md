@@ -1,5 +1,11 @@
 # Rust6502
 
+[![CI](https://github.com/brandon-charest/Rust6502/workflows/Rust%20CI/badge.svg)](https://github.com/brandon-charest/Rust6502/actions)
+[![codecov](https://codecov.io/gh/brandon-charest/Rust6502/branch/main/graph/badge.svg)](https://codecov.io/gh/brandon-charest/Rust6502)
+![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)
+[![License](https://img.shields.io/github/license/brandon-charest/Rust6502)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/brandon-charest/Rust6502)](https://github.com/brandon-charest/Rust6502/commits/main)
+
 A cycle-accurate 6502 CPU emulator written in Rust, implementing the full instruction set of the MOS Technology 6502 processor.
 
 ## Overview

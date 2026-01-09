@@ -1,3 +1,9 @@
 target
 nestest.*
 disasm.*
+
+# Code coverage
+lcov.info
+cobertura.xml
+*.profraw
+*.profdata

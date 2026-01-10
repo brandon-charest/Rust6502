@@ -23,7 +23,10 @@ fn test_asl_accumulator_basic() {
     assert!(cpu.registers.status.contains(Status::NEGATIVE));
     assert!(!cpu.registers.status.contains(Status::ZERO));
 
-    assert_eq!(cpu.cycles, 2, "test_asl_accumulator_basic should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_asl_accumulator_basic should take 2 cycles"
+    );
 }
 
 #[test]
@@ -45,7 +48,10 @@ fn test_asl_accumulator_sets_carry() {
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
     assert!(!cpu.registers.status.contains(Status::ZERO));
 
-    assert_eq!(cpu.cycles, 2, "test_asl_accumulator_sets_carry should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_asl_accumulator_sets_carry should take 2 cycles"
+    );
 }
 
 #[test]
@@ -67,7 +73,10 @@ fn test_asl_accumulator_to_zero() {
     assert!(cpu.registers.status.contains(Status::ZERO));
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_asl_accumulator_to_zero should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_asl_accumulator_to_zero should take 2 cycles"
+    );
 }
 
 #[test]
@@ -115,7 +124,10 @@ fn test_lsr_accumulator_basic() {
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
     assert!(!cpu.registers.status.contains(Status::ZERO));
 
-    assert_eq!(cpu.cycles, 2, "test_lsr_accumulator_basic should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_lsr_accumulator_basic should take 2 cycles"
+    );
 }
 
 #[test]
@@ -136,7 +148,10 @@ fn test_lsr_accumulator_sets_carry() {
     assert!(cpu.registers.status.contains(Status::CARRY)); // Bit 0 was set
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_lsr_accumulator_sets_carry should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_lsr_accumulator_sets_carry should take 2 cycles"
+    );
 }
 
 #[test]
@@ -158,7 +173,10 @@ fn test_lsr_accumulator_to_zero() {
     assert!(cpu.registers.status.contains(Status::ZERO));
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_lsr_accumulator_to_zero should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_lsr_accumulator_to_zero should take 2 cycles"
+    );
 }
 
 #[test]
@@ -180,7 +198,10 @@ fn test_lsr_clears_negative_flag() {
     // Negative flag must be clear because bit 7 is always 0 after LSR
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_lsr_clears_negative_flag should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_lsr_clears_negative_flag should take 2 cycles"
+    );
 }
 
 #[test]
@@ -227,7 +248,10 @@ fn test_rol_accumulator_basic() {
     assert!(!cpu.registers.status.contains(Status::CARRY));
     assert!(cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_rol_accumulator_basic should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_rol_accumulator_basic should take 2 cycles"
+    );
 }
 
 #[test]
@@ -249,7 +273,10 @@ fn test_rol_accumulator_with_carry_in() {
     assert!(!cpu.registers.status.contains(Status::CARRY));
     assert!(cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_rol_accumulator_with_carry_in should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_rol_accumulator_with_carry_in should take 2 cycles"
+    );
 }
 
 #[test]
@@ -271,7 +298,10 @@ fn test_rol_accumulator_sets_carry() {
     assert!(cpu.registers.status.contains(Status::CARRY)); // Bit 7 was set
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_rol_accumulator_sets_carry should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_rol_accumulator_sets_carry should take 2 cycles"
+    );
 }
 
 #[test]
@@ -293,7 +323,10 @@ fn test_rol_rotates_through_carry() {
     assert!(cpu.registers.status.contains(Status::CARRY)); // Bit 7 was set
     assert!(cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_rol_rotates_through_carry should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_rol_rotates_through_carry should take 2 cycles"
+    );
 }
 
 #[test]
@@ -341,7 +374,10 @@ fn test_ror_accumulator_basic() {
     assert!(!cpu.registers.status.contains(Status::CARRY));
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_ror_accumulator_basic should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_ror_accumulator_basic should take 2 cycles"
+    );
 }
 
 #[test]
@@ -363,7 +399,10 @@ fn test_ror_accumulator_with_carry_in() {
     assert!(!cpu.registers.status.contains(Status::CARRY));
     assert!(cpu.registers.status.contains(Status::NEGATIVE)); // Bit 7 set from carry
 
-    assert_eq!(cpu.cycles, 2, "test_ror_accumulator_with_carry_in should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_ror_accumulator_with_carry_in should take 2 cycles"
+    );
 }
 
 #[test]
@@ -385,7 +424,10 @@ fn test_ror_accumulator_sets_carry() {
     assert!(cpu.registers.status.contains(Status::CARRY)); // Bit 0 was set
     assert!(!cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_ror_accumulator_sets_carry should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_ror_accumulator_sets_carry should take 2 cycles"
+    );
 }
 
 #[test]
@@ -407,7 +449,10 @@ fn test_ror_rotates_through_carry() {
     assert!(cpu.registers.status.contains(Status::CARRY)); // Bit 0 was set
     assert!(cpu.registers.status.contains(Status::NEGATIVE));
 
-    assert_eq!(cpu.cycles, 2, "test_ror_rotates_through_carry should take 2 cycles");
+    assert_eq!(
+        cpu.cycles, 2,
+        "test_ror_rotates_through_carry should take 2 cycles"
+    );
 }
 
 #[test]

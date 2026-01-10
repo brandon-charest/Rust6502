@@ -10,15 +10,14 @@ A cycle-accurate 6502 CPU emulator written in Rust, implementing the full instru
 
 ## Overview
 
-This project is a comprehensive emulator for the 6502 microprocessor, the CPU that powered iconic systems like the Apple II, Commodore 64, and Nintendo Entertainment System (NES). The emulator focuses on accuracy and includes support for all official opcodes, including Binary-Coded Decimal (BCD) arithmetic mode.
+This purpose of this project is to explore and implement an emulator for the 6502 microprocessor, the CPU that powered iconic systems like the Apple II, Commodore 64, and Nintendo Entertainment System (NES). The emulator focuses on accuracy and includes support for all official and unofficial opcodes.
 
 ## Features
 
-- **Complete 6502 Instruction Set**: All 56 official instructions fully implemented
+- **Complete 6502 Instruction Set**: All official and unofficial instructions fully implemented
 - **Cycle-Accurate Execution**: Proper timing for each instruction and addressing mode
-- **BCD Arithmetic Support**: Accurate decimal mode operations for ADC and SBC
 - **Flexible Memory Bus**: Abstracted bus interface for easy integration with different systems
-- **Comprehensive Testing**: Includes Klaus Dormann's functional test suite for validation
+- **Comprehensive Testing**: Extensive unit tests organized by instruction category
 - **Clean Architecture**: Modular organization with separate modules for different instruction categories
 
 ### Implemented Components
@@ -56,26 +55,31 @@ git clone https://github.com/brandon-charest/rust-6502-emulator.git
 cd rust-6502-emulator
 
 # Build the project
-cargo build --release
+make build
 
 # Run tests to verify the build
-cargo test
+make test
 ```
 
 ## Usage
 
-### Running the Basic Example
+### Running the Emulator
 
-The project includes a simple demonstration program:
+The project includes several executable targets:
 
 ```bash
-cargo run
-```
+# Run the basic emulator example
+make run-emulator
 
-This runs a small program that demonstrates:
-- Loading immediate values into the accumulator
-- Executing a JMP instruction
-- Display of CPU state during execution
+# Run the nestest ROM with trace logging
+make run-nestest
+
+# Run the disassembler
+make run-disasm
+
+# Or simply use (defaults to run-emulator)
+make run
+```
 
 ### Library Usage
 
@@ -112,7 +116,15 @@ fn main() {
 The project includes extensive unit tests for all instructions:
 
 ```bash
-cargo test
+make test
+```
+
+### Code Coverage
+
+Generate code coverage reports:
+
+```bash
+make coverage
 ```
 
 ## Project Structure
@@ -120,31 +132,52 @@ cargo test
 ```
 rust-6502-emulator/
 ├── src/
-│   ├── lib.rs              # Library root
-│   ├── main.rs             # Example program runner
-│   ├── bin/                # Binary/test runners
+│   ├── lib.rs                    # Library root
+│   ├── main.rs                   # Example program runner
+│   ├── bin/                      # Binary/test runners
+│   │   ├── disasm.rs             # Disassembler tool
+│   │   └── nestest.rs            # nestest.rom runner with trace logging
 │   └── hardware/
-│       ├── mod.rs          # Hardware module exports
-│       ├── bus.rs          # Memory bus abstraction
-│       ├── registers.rs    # CPU register definitions
-│       ├── status.rs       # Status flag implementation
-│       ├── opcodes.rs      # Opcode definitions (all 256 opcodes)
+│       ├── mod.rs                # Hardware module exports
+│       ├── bus.rs                # Memory bus abstraction
+│       ├── registers.rs          # CPU register definitions
+│       ├── status.rs             # Status flag implementation
+│       ├── opcodes.rs            # Opcode definitions (all 256 opcodes)
 │       └── cpu/
-│           ├── mod.rs      # CPU core implementation
-│           ├── tests.rs    # CPU unit tests
-│           └── instructions/
-│               ├── arithmetic.rs   # ADC, SBC
-│               ├── logic.rs        # AND, ORA, EOR, BIT
-│               ├── shift.rs        # ASL, LSR, ROL, ROR
-│               ├── load.rs         # LDA, LDX, LDY
-│               ├── compare.rs      # CMP, CPX, CPY
-│               ├── branch.rs       # BCC, BCS, BEQ, etc.
-│               ├── transfer.rs     # TAX, TAY, TXA, etc.
-│               ├── stack.rs        # PHA, PLA, PHP, PLP
-│               ├── increment.rs    # INC, DEC, INX, etc.
-│               ├── control.rs      # JMP, JSR, RTS, RTI, BRK
-│               ├── flags.rs        # CLC, SEC, CLI, etc.
-│               └── noop.rs         # NOP
+│           ├── mod.rs            # CPU core implementation
+│           ├── addressing.rs     # Addressing mode logic
+│           ├── memory_access.rs  # Memory read/write helpers
+│           ├── disassembler.rs   # Instruction disassembly
+│           ├── disassembler_tests.rs  # Disassembler tests
+│           ├── instructions/     # Instruction implementations
+│           │   ├── mod.rs        # Instruction module exports
+│           │   ├── arithmetic.rs # ADC, SBC
+│           │   ├── logic.rs      # AND, ORA, EOR, BIT
+│           │   ├── shift.rs      # ASL, LSR, ROL, ROR
+│           │   ├── load.rs       # LDA, LDX, LDY, STA, STX, STY
+│           │   ├── compare.rs    # CMP, CPX, CPY
+│           │   ├── branch.rs     # BCC, BCS, BEQ, etc.
+│           │   ├── transfer.rs   # TAX, TAY, TXA, etc.
+│           │   ├── stack.rs      # PHA, PLA, PHP, PLP, JSR, RTS, etc.
+│           │   ├── increment.rs  # INC, DEC, INX, etc.
+│           │   ├── control.rs    # JMP, JSR, RTS, RTI, BRK
+│           │   ├── flags.rs      # CLC, SEC, CLI, etc.
+│           │   ├── noop.rs       # NOP
+│           │   └── unofficial.rs # Unofficial/undocumented opcodes
+│           └── tests/            # Modular unit tests
+│               ├── mod.rs        # Test module exports
+│               ├── core.rs       # Core CPU tests
+│               ├── arithmetic.rs # Arithmetic instruction tests
+│               ├── branch.rs     # Branch instruction tests
+│               ├── compare.rs    # Compare instruction tests
+│               ├── control.rs    # Control flow tests
+│               ├── flags.rs      # Flag manipulation tests
+│               ├── increment.rs  # Increment/decrement tests
+│               ├── load_store.rs # Load/store tests
+│               ├── shift.rs      # Shift/rotate tests
+│               ├── stack.rs      # Stack operation tests
+│               ├── transfer.rs   # Transfer instruction tests
+│               └── unofficial.rs # Unofficial opcode tests
 ├── Cargo.toml
 └── README.md
 ```
@@ -158,46 +191,49 @@ The emulator is organized into clean, modular components:
 - **Type Safety**: Leverages Rust's type system for correctness
 - **Testing**: Comprehensive test coverage including real-world test suites
 
-## Next Steps
+## Roadmap
 
-The roadmap for this project includes the following milestones:
+### CPU Implementation
 
-### Short Term: CPU Validation
+- [x] All official and unofficial NES 6502 instructions
+- [x] Cycle-accurate execution
+- [x] All addressing modes
+- [x] Comprehensive unit test suite
+- [x] Modular instruction organization
+- [x] Disassembler with trace logging
+- [ ] BCD (Binary-Coded Decimal) mode for ADC/SBC
+- [ ] Pass nestest.rom validation suite
+- [ ] Pass Klaus Dormann's functional test suite
 
-- **nestest.rom Validation**: Run and pass the comprehensive nestest.rom test suite to ensure full CPU accuracy
-- **Trace Logging**: Implement detailed execution trace matching nestest.log format for debugging
-- **Cycle Accuracy**: Fine-tune instruction timing to match hardware behavior exactly
+### NES Emulator Components
 
-### Long Term: Full NES Emulation
+- [ ] **PPU (Picture Processing Unit)**
+  - [ ] Background rendering
+  - [ ] Sprite rendering with sprite 0 hit
+  - [ ] Scrolling and nametables
+  - [ ] Pattern tables and palettes
+  - [ ] Frame timing and NMI generation
 
-Once the CPU is fully validated, expand into a complete NES emulator by implementing:
+- [ ] **APU (Audio Processing Unit)**
+  - [ ] Pulse wave channels (2x)
+  - [ ] Triangle wave channel
+  - [ ] Noise channel
+  - [ ] DMC (Delta Modulation Channel)
+  - [ ] Audio mixing and output
 
-- **PPU (Picture Processing Unit)**
-  - Background rendering
-  - Sprite rendering
-  - Scrolling and nametables
-  - Pattern tables and palettes
-  
-- **APU (Audio Processing Unit)**
-  - Pulse wave channels (2x)
-  - Triangle wave channel
-  - Noise channel
-  - DMC (Delta Modulation Channel)
-  
-- **Memory Mapper Support**
-  - NROM (Mapper 0)
-  - MMC1 (Mapper 1)
-  - Additional mappers as needed
-  
-- **Input Handling**
-  - Controller interface
-  - Input polling mechanism
-  
-- **Integration**
-  - Cartridge loading (.nes ROM files)
-  - Rendering pipeline
-  - Audio output
-  - Game loop and timing
+- [ ] **Memory Mappers**
+  - [ ] NROM (Mapper 0)
+  - [ ] MMC1 (Mapper 1)
+  - [ ] UxROM (Mapper 2)
+  - [ ] CNROM (Mapper 3)
+  - [ ] Additional mappers as needed
+
+- [ ] **Input & Integration**
+  - [ ] Controller interface (standard NES controller)
+  - [ ] Cartridge loading (.nes ROM files)
+  - [ ] Frontend with rendering and audio
+  - [ ] Game loop and proper timing
+  - [ ] Save state support
 
 ## Resources
 
@@ -206,4 +242,3 @@ Once the CPU is fully validated, expand into a complete NES emulator by implemen
 - [6502 Instruction Set](https://www.masswerk.at/6502/6502_instruction_set.html)
 - [NES Emulator](https://www.youtube.com/watch?v=F8kx56OZQhg&list=PLrOv9FMX8xJHqMvSGB_9G9nZZ_4IgteYf&index=2)
 - [Klaus Dormann's Test Suite](https://github.com/Klaus2m5/6502_65C02_functional_tests)
-

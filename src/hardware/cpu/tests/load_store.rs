@@ -272,7 +272,7 @@ fn test_lda_indirect_x_zp_wrap_torture() {
     // Base ($F0) + X ($0F) = $FF
     cpu.registers.x_register = 0x0F;
 
-    // PROGRAM: LDA ($F0, X)
+    // LDA ($F0, X)
     // Code lives at $8000
     bus.write(0x8000, 0xA1);
     bus.write(0x8001, 0xF0);

@@ -63,12 +63,12 @@ fn test_pha_pla_roundtrip() {
     let mut bus = Memory::new();
     let mut cpu = CPU::new();
 
-    // 1. PHA: Push 0x55
+    // Push 0x55
     bus.write(0x8000, 0x48);
-    // 2. LDA: Load 0x00 (Corrupt A)
+    // Load 0x00 (Corrupt A)
     bus.write(0x8001, 0xA9);
     bus.write(0x8002, 0x00);
-    // 3. PLA: Restore A
+    // Restore A
     bus.write(0x8003, 0x68);
 
     cpu.registers.accumulator = 0x55;

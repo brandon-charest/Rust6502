@@ -45,6 +45,7 @@ pub fn rol(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {
 }
 pub fn ror(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {
     if *mode == AddressingMode::Accumulator {
+        cpu.read(bus, cpu.registers.program_counter); // Dummy read for cycle accuracy
         let value = cpu.registers.accumulator;
         cpu.registers.accumulator = rotate_right(cpu, value);
     } else {

@@ -4,10 +4,7 @@ pub mod instructions;
 pub mod memory_access;
 use crate::hardware::{
     bus::Bus,
-    cpu::instructions::{
-        arithmetic, branch, compare, control, flags, increment, load, logic, noop, shift, stack,
-        transfer, unofficial,
-    },
+    cpu::instructions::*,
     opcodes::{AddressingMode, Opcode, OpcodeSyntax},
     status::Status,
 };
@@ -55,10 +52,10 @@ impl CPU {
             OpcodeSyntax::ADC => arithmetic::adc(self, bus, &opcode.mode),
             OpcodeSyntax::SBC => arithmetic::sbc(self, bus, &opcode.mode),
             // ==== INCREMENT/DECREMENT ====
-            OpcodeSyntax::DEX => increment::dex(self),
-            OpcodeSyntax::DEY => increment::dey(self),
-            OpcodeSyntax::INX => increment::inx(self),
-            OpcodeSyntax::INY => increment::iny(self),
+            OpcodeSyntax::DEX => increment::dex(self, bus),
+            OpcodeSyntax::DEY => increment::dey(self, bus),
+            OpcodeSyntax::INX => increment::inx(self, bus),
+            OpcodeSyntax::INY => increment::iny(self, bus),
             OpcodeSyntax::INC => increment::inc(self, bus, &opcode.mode),
             OpcodeSyntax::DEC => increment::dec(self, bus, &opcode.mode),
             OpcodeSyntax::DCP => unofficial::dcp(self, bus, &opcode.mode),
@@ -143,7 +140,6 @@ impl CPU {
             .set(Status::NEGATIVE, (value & 0x80) != 0);
     }
 
-    #[allow(dead_code)]
     pub fn trace(&mut self, bus: &mut dyn Bus) -> String {
         let pc = self.registers.program_counter;
         let opcode_byte = bus.read(pc); // Don't use self.read to avoid cycle count
@@ -222,3 +218,6 @@ impl CPU {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod disassembler_tests;

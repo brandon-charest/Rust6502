@@ -13,7 +13,7 @@ fn test_cpu_new() {
     assert_eq!(cpu.registers.status, Status::default());
 
     assert_eq!(cpu.cycles, 0);
-    assert_eq!(cpu.halted, false);
+    assert!(!cpu.halted);
 }
 
 #[test]
@@ -369,7 +369,10 @@ fn test_lda_indirect_x_zp_wrap_torture() {
 
     cpu.step(&mut bus);
 
-    assert_eq!(cpu.registers.accumulator, 0x42, "Failed to wrap Zero Page pointer!");
+    assert_eq!(
+        cpu.registers.accumulator, 0x42,
+        "Failed to wrap Zero Page pointer!"
+    );
 }
 
 #[test]
@@ -407,7 +410,10 @@ fn test_jmp_indirect_bug() {
     cpu.registers.program_counter = 0x8000;
     cpu.step(&mut bus);
 
-    assert_eq!(cpu.registers.program_counter, 0x8000, "PC should jump to $8000");
+    assert_eq!(
+        cpu.registers.program_counter, 0x8000,
+        "PC should jump to $8000"
+    );
 }
 
 #[test]
@@ -436,7 +442,10 @@ fn test_jmp() {
 
     assert_eq!(bus.read(0x0000), 0x01, "JMP failed!");
     assert_eq!(cpu.cycles, 9);
-    assert_eq!(cpu.registers.program_counter, 0x800A, "PC ended up in the wrong place");
+    assert_eq!(
+        cpu.registers.program_counter, 0x800A,
+        "PC ended up in the wrong place"
+    );
 }
 
 #[test]
@@ -473,7 +482,7 @@ fn test_txs_does_not_affect_flags() {
 
     assert_eq!(cpu.registers.stack_pointer, 0x00);
     // TXS should NOT set Zero flag even if X is 0!
-    assert_eq!(cpu.registers.status.contains(Status::ZERO), false);
+    assert!(!cpu.registers.status.contains(Status::ZERO));
 }
 
 #[test]
@@ -542,8 +551,14 @@ fn test_php_pushes_break_and_unused_flags() {
     let pushed_value = bus.read(0x01FD);
 
     assert_eq!(pushed_value, 0x30, "PHP must push bits 4 and 5 as 1!");
-    assert_eq!(cpu.registers.status.is_empty(), true, "PHP should not modify the CPU register");
-    assert_eq!(cpu.registers.stack_pointer, 0xFC, "Stack pointer should decrement");
+    assert!(
+        cpu.registers.status.is_empty(),
+        "PHP should not modify the CPU register"
+    );
+    assert_eq!(
+        cpu.registers.stack_pointer, 0xFC,
+        "Stack pointer should decrement"
+    );
 }
 #[test]
 fn test_plp_ignores_break_flag() {
@@ -561,14 +576,19 @@ fn test_plp_ignores_break_flag() {
     assert!(cpu.registers.status.contains(Status::NEGATIVE));
     assert!(cpu.registers.status.contains(Status::OVERFLOW));
 
-    assert_eq!(
-        cpu.registers.status.contains(Status::BRK),
-        false,
+    assert!(
+        !cpu.registers.status.contains(Status::BRK),
         "PLP must ignore the Break flag from stack!"
     );
 
-    assert!(cpu.registers.status.contains(Status::UNUSED), "Unused flag should always be 1");
-    assert_eq!(cpu.registers.stack_pointer, 0xFD, "Stack pointer should increment");
+    assert!(
+        cpu.registers.status.contains(Status::UNUSED),
+        "Unused flag should always be 1"
+    );
+    assert_eq!(
+        cpu.registers.stack_pointer, 0xFD,
+        "Stack pointer should increment"
+    );
 }
 
 #[test]
@@ -589,7 +609,11 @@ fn test_pha_pla_roundtrip() {
 
     // Execute PHA
     cpu.step(&mut bus);
-    assert_eq!(bus.read(0x01FD), 0x55, "Value 0x55 should be on stack at 0x01FD");
+    assert_eq!(
+        bus.read(0x01FD),
+        0x55,
+        "Value 0x55 should be on stack at 0x01FD"
+    );
     assert_eq!(cpu.registers.stack_pointer, 0xFC, "SP should decrement");
 
     // Execute LDA #00
@@ -598,7 +622,10 @@ fn test_pha_pla_roundtrip() {
 
     // Execute PLA
     cpu.step(&mut bus);
-    assert_eq!(cpu.registers.accumulator, 0x55, "PLA failed to restore 0x55");
+    assert_eq!(
+        cpu.registers.accumulator, 0x55,
+        "PLA failed to restore 0x55"
+    );
     assert_eq!(cpu.registers.stack_pointer, 0xFD, "SP should increment");
     assert!(!cpu.registers.status.contains(Status::ZERO));
 }
@@ -632,7 +659,10 @@ fn test_jsr_rts_flow() {
     cpu.step(&mut bus);
 
     // Verify Jump
-    assert_eq!(cpu.registers.program_counter, 0x8004, "PC should be at Subroutine ($8004)");
+    assert_eq!(
+        cpu.registers.program_counter, 0x8004,
+        "PC should be at Subroutine ($8004)"
+    );
 
     // Verify Stack (Should contain $8002, Little Endian)
     // Stack Pointer starts at FD.
@@ -647,8 +677,14 @@ fn test_jsr_rts_flow() {
 
     // Verify Return
     // RTS pops $8002, adds 1 -> $8003.
-    assert_eq!(cpu.registers.program_counter, 0x8003, "RTS should return to instruction AFTER JSR");
-    assert_eq!(cpu.registers.stack_pointer, 0xFD, "Stack Pointer should return to original");
+    assert_eq!(
+        cpu.registers.program_counter, 0x8003,
+        "RTS should return to instruction AFTER JSR"
+    );
+    assert_eq!(
+        cpu.registers.stack_pointer, 0xFD,
+        "Stack Pointer should return to original"
+    );
 }
 
 #[test]
@@ -687,7 +723,10 @@ fn test_bne_logic() {
     cpu.step(&mut bus);
 
     // PC should have advanced 2 bytes (8000 -> 8002)
-    assert_eq!(cpu.registers.program_counter, 0x8002, "Should not branch if Z is set");
+    assert_eq!(
+        cpu.registers.program_counter, 0x8002,
+        "Should not branch if Z is set"
+    );
 
     // Zero Flag IS CLEAR (Should branch)
     // Reset PC to test again
@@ -700,7 +739,10 @@ fn test_bne_logic() {
     // Math: $8000 (Opcode) + 1 (Fetch) = $8001. Fetch Offset ($8002).
     // Base PC for math is $8002.
     // $8002 + 5 = $8007.
-    assert_eq!(cpu.registers.program_counter, 0x8007, "Should branch if Z is clear");
+    assert_eq!(
+        cpu.registers.program_counter, 0x8007,
+        "Should branch if Z is clear"
+    );
 }
 
 #[test]
@@ -723,7 +765,10 @@ fn test_beq_backward_jump() {
     // Base PC: $8007.
     // Offset: -3.
     // Target: $8007 - 3 = $8004.
-    assert_eq!(cpu.registers.program_counter, 0x8004, "Backward jump failed");
+    assert_eq!(
+        cpu.registers.program_counter, 0x8004,
+        "Backward jump failed"
+    );
 }
 
 #[test]

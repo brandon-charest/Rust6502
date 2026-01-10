@@ -23,6 +23,12 @@ pub struct CPU {
     pub halted: bool,
 }
 
+impl Default for CPU {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CPU {
     pub fn new() -> CPU {
         CPU {
@@ -117,11 +123,6 @@ impl CPU {
             // ==== NOOP ====
             OpcodeSyntax::NOP => noop::noop(self, bus),
             OpcodeSyntax::KIL => unofficial::kil(self, bus, &opcode.mode),
-
-            _ => panic!(
-                "Unimplemented opcode: ${:02X} ({:?} {:?}) at PC=${:04X}",
-                raw_data, opcode.syntax, opcode.mode, pc_before
-            ),
         }
     }
 
@@ -137,9 +138,12 @@ impl CPU {
 
     pub(crate) fn update_nz_flags(&mut self, value: u8) {
         self.registers.status.set(Status::ZERO, value == 0);
-        self.registers.status.set(Status::NEGATIVE, (value & 0x80) != 0);
+        self.registers
+            .status
+            .set(Status::NEGATIVE, (value & 0x80) != 0);
     }
 
+    #[allow(dead_code)]
     pub fn trace(&mut self, bus: &mut dyn Bus) -> String {
         let pc = self.registers.program_counter;
         let opcode_byte = bus.read(pc); // Don't use self.read to avoid cycle count
@@ -152,8 +156,11 @@ impl CPU {
         for i in 1..opcode.bytes {
             raw_bytes.push(bus.read(pc + i as u16));
         }
-        let hex_dump =
-            raw_bytes.iter().map(|b| format!("{:02X}", b)).collect::<Vec<String>>().join(" ");
+        let hex_dump = raw_bytes
+            .iter()
+            .map(|b| format!("{:02X}", b))
+            .collect::<Vec<String>>()
+            .join(" ");
 
         let asm = disassembler::disassemble_instruction(&opcode, &raw_bytes, pc);
         if asm.contains("BNE") || asm.contains("BEQ") {

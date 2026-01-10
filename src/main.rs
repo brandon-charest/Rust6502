@@ -32,7 +32,10 @@ fn main() {
         cpu.step(&mut bus);
         if cpu.registers.status.contains(Status::BRK) {
             println!("\n--- BRK Encountered! Execution Stopped. ---");
-            println!("Final Accumulator: {:02X} (Should be FF)", cpu.registers.accumulator);
+            println!(
+                "Final Accumulator: {:02X} (Should be FF)",
+                cpu.registers.accumulator
+            );
             break;
         }
     }

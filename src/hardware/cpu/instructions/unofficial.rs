@@ -49,9 +49,13 @@ pub fn rla(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {
     };
 
     if (value & 0x80) != 0 {
-        cpu.registers.status.insert(crate::hardware::cpu::Status::CARRY);
+        cpu.registers
+            .status
+            .insert(crate::hardware::cpu::Status::CARRY);
     } else {
-        cpu.registers.status.remove(crate::hardware::cpu::Status::CARRY);
+        cpu.registers
+            .status
+            .remove(crate::hardware::cpu::Status::CARRY);
     }
 
     value = (value << 1) | old_carry;

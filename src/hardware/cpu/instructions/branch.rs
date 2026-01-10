@@ -44,7 +44,10 @@ fn branch(cpu: &mut CPU, bus: &mut dyn Bus, condition: bool) {
     if condition {
         // Calculate target address using signed offset
         // PC is already at the next instruction after the offset byte
-        let jump_addr = cpu.registers.program_counter.wrapping_add_signed(offset as i16);
+        let jump_addr = cpu
+            .registers
+            .program_counter
+            .wrapping_add_signed(offset as i16);
 
         // Cycles: Branch Taken (+1)
         let _ = cpu.read(bus, cpu.registers.program_counter);

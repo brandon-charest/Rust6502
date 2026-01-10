@@ -34,6 +34,10 @@ pub fn bit(cpu: &mut CPU, bus: &mut dyn Bus, mode: &AddressingMode) {
     let result = cpu.registers.accumulator & value;
 
     cpu.registers.status.set(Status::ZERO, result == 0);
-    cpu.registers.status.set(Status::NEGATIVE, memory_flags.contains(Status::NEGATIVE));
-    cpu.registers.status.set(Status::OVERFLOW, memory_flags.contains(Status::OVERFLOW));
+    cpu.registers
+        .status
+        .set(Status::NEGATIVE, memory_flags.contains(Status::NEGATIVE));
+    cpu.registers
+        .status
+        .set(Status::OVERFLOW, memory_flags.contains(Status::OVERFLOW));
 }

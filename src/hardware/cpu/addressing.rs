@@ -15,10 +15,7 @@ impl CPU {
         access_mode: AccessMode,
     ) -> u16 {
         match mode {
-            AddressingMode::Absolute => {
-                let addr = self.fetch_word(bus);
-                addr
-            }
+            AddressingMode::Absolute => self.fetch_word(bus),
             AddressingMode::AbsoluteX => {
                 let base = self.fetch_word(bus);
                 let addr = base.wrapping_add(self.registers.x_register as u16);
@@ -99,7 +96,7 @@ impl CPU {
                 // Burn a cycle for the addition!
                 // The real 6502 spends 1 cycle doing the math (pos + X) inside the ALU
                 let _ = self.read(bus, pos as u16);
-                addr as u16
+                addr
             }
             AddressingMode::ZeroPageY => {
                 let pos = self.fetch_byte(bus);
@@ -108,7 +105,7 @@ impl CPU {
                 // Burn a cycle for the addition!
                 // The real 6502 spends 1 cycle doing the math (pos + Y) inside the ALU
                 let _ = self.read(bus, pos as u16);
-                addr as u16
+                addr
             }
             _ => panic!("Addressing mode {:?} not yet implemented", mode),
         }

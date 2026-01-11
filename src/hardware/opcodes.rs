@@ -1466,21 +1466,3 @@ impl Opcode {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_get_opcode() {
-        if let Some(opcode) = Opcode::from_u8(0xEA) {
-            assert_eq!(opcode.code, 0xEA);
-            assert_eq!(opcode.syntax, OpcodeSyntax::NOP);
-            assert_eq!(opcode.mode, AddressingMode::Implied);
-            assert_eq!(opcode.bytes, 1);
-            assert_eq!(opcode.cycles, 2);
-        } else {
-            panic!("Opcode 0xEA should have been found!");
-        }
-    }
-}

@@ -36,6 +36,7 @@ mod core;
 mod flags;
 mod increment;
 mod load_store;
+mod logic;
 mod shift;
 mod stack;
 mod transfer;

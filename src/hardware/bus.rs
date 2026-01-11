@@ -18,7 +18,7 @@ pub trait Bus {
     fn write(&mut self, address: u16, value: u8);
 }
 pub struct NesBus {
-    ram: [u8; RAM_SIZE],
+    cpu_ram: [u8; RAM_SIZE],
     ppu: PPU,
     prg_rom: Vec<u8>,
 }
@@ -26,7 +26,7 @@ pub struct NesBus {
 impl NesBus {
     pub fn new() -> NesBus {
         NesBus {
-            ram: [0; RAM_SIZE],
+            cpu_ram: [0; RAM_SIZE],
             ppu: PPU::new(),
             prg_rom: Vec::new(),
         }
@@ -35,18 +35,14 @@ impl NesBus {
     fn read_prg_rom(&self, addr: u16) -> u8 {
         let mut addr = addr - 0x8000; // Map $8000 -> 0
 
-        // MIRRORING LOGIC (NROM-128):
-        // If the game is small (16KB) but the CPU tries to read from the
-        // upper 16KB range ($C000+), we must mirror it back to the start.
         if self.prg_rom.len() == 0x4000 && addr >= 0x4000 {
             addr %= 0x4000;
         }
 
-        // Safety check to prevent crashing
         if (addr as usize) < self.prg_rom.len() {
             self.prg_rom[addr as usize]
         } else {
-            0 // "Open Bus" behavior (or just return 0 for now)
+            0
         }
     }
 }
@@ -61,7 +57,7 @@ impl Bus for NesBus {
         match addr {
             RAM_START..=RAM_END => {
                 let mirror_addr = addr & RAM_MIRROR_MASK;
-                self.ram[mirror_addr as usize]
+                self.cpu_ram[mirror_addr as usize]
             }
             PPU_REGISTERS_START..=PPU_REGISTERS_END => {
                 let mirror_addr = addr & PPU_REGISTER_MASK;
@@ -76,7 +72,7 @@ impl Bus for NesBus {
         match addr {
             RAM_START..=RAM_END => {
                 let mirror_addr = addr & RAM_MIRROR_MASK;
-                self.ram[mirror_addr as usize] = value;
+                self.cpu_ram[mirror_addr as usize] = value;
             }
 
             PPU_REGISTERS_START..=PPU_REGISTERS_END => {
@@ -98,7 +94,7 @@ mod tests {
     #[test]
     fn test_memory_new() {
         let mem = NesBus::new();
-        assert_eq!(mem.ram.len(), RAM_SIZE);
+        assert_eq!(mem.cpu_ram.len(), RAM_SIZE);
     }
 
     #[test]
@@ -106,7 +102,7 @@ mod tests {
         let mem = NesBus::new();
         // Ensure all memory is initialized to zero
         for i in 0..RAM_SIZE {
-            assert_eq!(mem.ram[i], 0, "Memory at index {} was not zero", i);
+            assert_eq!(mem.cpu_ram[i], 0, "Memory at index {} was not zero", i);
         }
     }
 
@@ -138,5 +134,12 @@ mod tests {
 
         assert_eq!(mem.read(0x1234), 0xAA);
         assert_eq!(mem.read(0x1235), 0xBB);
+    }
+
+    #[test]
+    fn test_nes_bus_default() {
+        let mem = NesBus::default();
+        assert_eq!(mem.cpu_ram.len(), RAM_SIZE);
+        assert_eq!(mem.ppu, PPU::default())
     }
 }

@@ -4,3 +4,6 @@ pub mod opcodes;
 pub mod ppu;
 pub mod registers;
 pub mod status;
+
+#[cfg(test)]
+mod tests;

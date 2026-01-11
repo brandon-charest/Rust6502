@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_bne_logic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // $8000: BNE +5 ($05) -> Jumps to $8007
     // $8007: LDA #$01 (Success)
@@ -43,8 +42,7 @@ fn test_bne_logic() {
 
 #[test]
 fn test_beq_backward_jump() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Jump BACKWARDS
     // $8005: BEQ -3 ($FD) -> Target $8004
@@ -69,8 +67,7 @@ fn test_beq_backward_jump() {
 
 #[test]
 fn test_bcc_bcs_logic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // 1. BCC +5 (Branch if Carry Clear)
     bus.write(0x8000, 0x90);

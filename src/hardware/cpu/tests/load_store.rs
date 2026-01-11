@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_lda_immediate_timing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Program: LDA $10 (Immediate)
     bus.write(0x8000, 0xA9); // Opcode (Cycle 1)
@@ -21,8 +20,7 @@ fn test_lda_immediate_timing() {
 
 #[test]
 fn test_lda_zeropage_timing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Program: LDA $44 (Zero Page)
     bus.write(0x8000, 0xA5); // Opcode (Cycle 1)
@@ -41,8 +39,7 @@ fn test_lda_zeropage_timing() {
 
 #[test]
 fn test_lda_zeropage_x_timing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Program: LDA $44 (Zero Page X)
     bus.write(0x8000, 0xB5);
@@ -62,8 +59,7 @@ fn test_lda_zeropage_x_timing() {
 
 #[test]
 fn test_lda_absolute() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // LDA $1234
     bus.write(0x8000, 0xAD); // Opcode
@@ -83,8 +79,7 @@ fn test_lda_absolute() {
 
 #[test]
 fn test_lda_absolute_x_no_crossing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // LDA $1000, X
     bus.write(0x8000, 0xBD);
@@ -104,9 +99,7 @@ fn test_lda_absolute_x_no_crossing() {
 
 #[test]
 fn test_lda_absolute_x_page_crossing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
-
+    let (mut cpu, mut bus) = setup();
     // LDA $10FF, X
     bus.write(0x8000, 0xBD);
     bus.write(0x8001, 0xFF);
@@ -126,8 +119,7 @@ fn test_lda_absolute_x_page_crossing() {
 // Base: $2080, Y: $80 -> Target: $2100 ($2080 + $80 = $2100)
 #[test]
 fn test_lda_absolute_y_page_crossing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x8000, 0xB9); // LDA Absolute,Y
     bus.write(0x8001, 0x80);
@@ -147,9 +139,7 @@ fn test_lda_absolute_y_page_crossing() {
 
 #[test]
 fn test_lda_indirect_x() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
-
+    let (mut cpu, mut bus) = setup();
     // LDA ($20, X)
     bus.write(0x8000, 0xA1);
     bus.write(0x8001, 0x20);
@@ -171,8 +161,7 @@ fn test_lda_indirect_x() {
 
 #[test]
 fn test_lda_indirect_y_no_crossing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // DA ($20), Y
     bus.write(0x8000, 0xB1);
@@ -197,8 +186,7 @@ fn test_lda_indirect_y_no_crossing() {
 
 #[test]
 fn test_lda_indirect_y_page_crossing() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // LDA ($20), Y
     bus.write(0x8000, 0xB1);
@@ -221,8 +209,7 @@ fn test_lda_indirect_y_page_crossing() {
 
 #[test]
 fn test_ldx_immediate_and_flags() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // LDX #$00 (Test Zero Flag)
     bus.write(0x8000, 0xA2);
@@ -249,8 +236,7 @@ fn test_ldx_immediate_and_flags() {
 
 #[test]
 fn test_ldy_immediate() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // LDY #$42
     bus.write(0x8000, 0xA0);
@@ -265,8 +251,7 @@ fn test_ldy_immediate() {
 
 #[test]
 fn test_lda_indirect_x_zp_wrap_torture() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Set X to a value that forces the pointer to $FF
     // Base ($F0) + X ($0F) = $FF
@@ -304,8 +289,7 @@ fn test_lda_indirect_x_zp_wrap_torture() {
 
 #[test]
 fn test_sta_absolute() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x8000, 0x8D);
     bus.write(0x8001, 0x00);
@@ -323,8 +307,7 @@ fn test_sta_absolute() {
 
 #[test]
 fn test_register_transfers() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     let test_program: Vec<u8> = vec![
         0xA9, 0x42, // LDA #$42

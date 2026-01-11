@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_inx_increments_x_register() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x10;
 
@@ -22,8 +21,7 @@ fn test_inx_increments_x_register() {
 
 #[test]
 fn test_inx_wraps_around() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0xFF;
 
@@ -43,8 +41,7 @@ fn test_inx_wraps_around() {
 
 #[test]
 fn test_inx_sets_negative_flag() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x7F;
 
@@ -64,8 +61,7 @@ fn test_inx_sets_negative_flag() {
 
 #[test]
 fn test_iny_increments_y_register() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.y_register = 0x10;
 
@@ -85,8 +81,7 @@ fn test_iny_increments_y_register() {
 
 #[test]
 fn test_iny_wraps_around() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.y_register = 0xFF;
 
@@ -106,8 +101,7 @@ fn test_iny_wraps_around() {
 
 #[test]
 fn test_dex_decrements_x_register() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x10;
 
@@ -127,8 +121,7 @@ fn test_dex_decrements_x_register() {
 
 #[test]
 fn test_dex_wraps_around() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x00;
 
@@ -148,8 +141,7 @@ fn test_dex_wraps_around() {
 
 #[test]
 fn test_dex_sets_zero_flag() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x01;
 
@@ -169,8 +161,7 @@ fn test_dex_sets_zero_flag() {
 
 #[test]
 fn test_dey_decrements_y_register() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.y_register = 0x10;
 
@@ -190,8 +181,7 @@ fn test_dey_decrements_y_register() {
 
 #[test]
 fn test_dey_wraps_around() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.y_register = 0x00;
 
@@ -211,8 +201,7 @@ fn test_dey_wraps_around() {
 
 #[test]
 fn test_inc_zero_page() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Set up value in zero page
     bus.write(0x0042, 0x10);
@@ -234,8 +223,7 @@ fn test_inc_zero_page() {
 
 #[test]
 fn test_inc_zero_page_x() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x05;
     bus.write(0x0047, 0x20);
@@ -257,8 +245,7 @@ fn test_inc_zero_page_x() {
 
 #[test]
 fn test_inc_absolute() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x1234, 0x7F);
 
@@ -280,8 +267,7 @@ fn test_inc_absolute() {
 
 #[test]
 fn test_inc_wraps_to_zero() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0xFF);
 
@@ -302,8 +288,7 @@ fn test_inc_wraps_to_zero() {
 
 #[test]
 fn test_dec_zero_page() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0x10);
 
@@ -324,8 +309,7 @@ fn test_dec_zero_page() {
 
 #[test]
 fn test_dec_zero_page_x() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x05;
     bus.write(0x0047, 0x01);
@@ -347,8 +331,7 @@ fn test_dec_zero_page_x() {
 
 #[test]
 fn test_dec_absolute() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x1234, 0x80);
 
@@ -370,8 +353,7 @@ fn test_dec_absolute() {
 
 #[test]
 fn test_dec_wraps_to_ff() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0x00);
 

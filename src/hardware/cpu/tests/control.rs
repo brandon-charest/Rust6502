@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_jmp_indirect_bug() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x30FF, 0x00);
     bus.write(0x3000, 0x80);
@@ -24,8 +23,7 @@ fn test_jmp_indirect_bug() {
 
 #[test]
 fn test_jmp() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     let program: Vec<u8> = vec![
         0xA9, 0x01, // 8000: LDA #$01 (Value)
@@ -56,8 +54,7 @@ fn test_jmp() {
 
 #[test]
 fn test_jsr_rts_flow() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // PROGRAM START AT $8000
     // JSR to $8004 (Opcode $20)
@@ -109,8 +106,7 @@ fn test_jsr_rts_flow() {
 
 #[test]
 fn test_brk_rti_cycle() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Setup Vector
     bus.write(0xFFFE, 0x00);

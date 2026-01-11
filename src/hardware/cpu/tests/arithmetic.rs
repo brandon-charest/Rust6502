@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_adc_overflow_flag() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // 1. Setup: 127 + 1 = 128 (-128 in i8)
     // Positive + Positive = Negative Result -> OVERFLOW!

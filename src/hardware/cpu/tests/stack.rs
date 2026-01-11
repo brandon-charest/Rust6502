@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_php_pushes_break_and_unused_flags() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.status = Status::empty();
     cpu.registers.stack_pointer = 0xFD;
@@ -29,8 +28,7 @@ fn test_php_pushes_break_and_unused_flags() {
 
 #[test]
 fn test_plp_ignores_break_flag() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x01FD, 0xF0);
     cpu.registers.stack_pointer = 0xFC;
@@ -60,8 +58,7 @@ fn test_plp_ignores_break_flag() {
 
 #[test]
 fn test_pha_pla_roundtrip() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Push 0x55
     bus.write(0x8000, 0x48);

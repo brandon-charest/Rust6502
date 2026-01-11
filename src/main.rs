@@ -1,14 +1,10 @@
-mod hardware;
-use hardware::cpu::CPU;
+use crate::hardware::{bus::Bus, cpu::CPU, status::Status};
 
-use crate::hardware::{
-    bus::{Bus, Memory},
-    status::Status,
-};
+mod hardware;
 
 fn main() {
     let mut cpu = CPU::new();
-    let mut bus = Memory::new();
+    let mut bus = hardware::bus::NesBus::new();
 
     #[rustfmt::skip]
     let program: Vec<u8> = vec![

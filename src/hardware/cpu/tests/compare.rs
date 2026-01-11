@@ -2,9 +2,7 @@ use super::*;
 
 #[test]
 fn test_cmp_all_cases() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
-
+    let (mut cpu, mut bus) = setup();
     // Program:
     // CMP #$10 (Where A = $10) -> Equal
     // CMP #$20 (Where A = $10) -> Less
@@ -42,9 +40,7 @@ fn test_cmp_all_cases() {
 
 #[test]
 fn test_eor_logic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
-
+    let (mut cpu, mut bus) = setup();
     // A = 0xFF (1111 1111)
     // M = 0xAA (1010 1010) (Immediate value)
     // Result Should be 0x55 (0101 0101)

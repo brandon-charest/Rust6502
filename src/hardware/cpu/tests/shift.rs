@@ -6,8 +6,7 @@ use super::*;
 
 #[test]
 fn test_asl_accumulator_basic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x40; // 0100_0000
 
@@ -31,8 +30,7 @@ fn test_asl_accumulator_basic() {
 
 #[test]
 fn test_asl_accumulator_sets_carry() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x81; // 1000_0001
 
@@ -56,8 +54,7 @@ fn test_asl_accumulator_sets_carry() {
 
 #[test]
 fn test_asl_accumulator_to_zero() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x80; // 1000_0000
 
@@ -81,8 +78,7 @@ fn test_asl_accumulator_to_zero() {
 
 #[test]
 fn test_asl_zero_page() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0x0F); // 0000_1111
 
@@ -107,8 +103,7 @@ fn test_asl_zero_page() {
 
 #[test]
 fn test_lsr_accumulator_basic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x02; // 0000_0010
 
@@ -132,8 +127,7 @@ fn test_lsr_accumulator_basic() {
 
 #[test]
 fn test_lsr_accumulator_sets_carry() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x03; // 0000_0011
 
@@ -156,8 +150,7 @@ fn test_lsr_accumulator_sets_carry() {
 
 #[test]
 fn test_lsr_accumulator_to_zero() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x01; // 0000_0001
 
@@ -181,8 +174,7 @@ fn test_lsr_accumulator_to_zero() {
 
 #[test]
 fn test_lsr_clears_negative_flag() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0xFF; // 1111_1111
 
@@ -206,8 +198,7 @@ fn test_lsr_clears_negative_flag() {
 
 #[test]
 fn test_lsr_zero_page() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0x1E); // 0001_1110
 
@@ -231,8 +222,7 @@ fn test_lsr_zero_page() {
 
 #[test]
 fn test_rol_accumulator_basic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x40; // 0100_0000
     cpu.registers.status.remove(Status::CARRY);
@@ -256,8 +246,7 @@ fn test_rol_accumulator_basic() {
 
 #[test]
 fn test_rol_accumulator_with_carry_in() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x40; // 0100_0000
     cpu.registers.status.insert(Status::CARRY);
@@ -281,8 +270,7 @@ fn test_rol_accumulator_with_carry_in() {
 
 #[test]
 fn test_rol_accumulator_sets_carry() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x81; // 1000_0001
     cpu.registers.status.remove(Status::CARRY);
@@ -306,8 +294,7 @@ fn test_rol_accumulator_sets_carry() {
 
 #[test]
 fn test_rol_rotates_through_carry() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0xFF; // 1111_1111
     cpu.registers.status.insert(Status::CARRY);
@@ -331,8 +318,7 @@ fn test_rol_rotates_through_carry() {
 
 #[test]
 fn test_rol_zero_page() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0x0F); // 0000_1111
     cpu.registers.status.remove(Status::CARRY);
@@ -357,8 +343,7 @@ fn test_rol_zero_page() {
 
 #[test]
 fn test_ror_accumulator_basic() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x02; // 0000_0010
     cpu.registers.status.remove(Status::CARRY);
@@ -382,8 +367,7 @@ fn test_ror_accumulator_basic() {
 
 #[test]
 fn test_ror_accumulator_with_carry_in() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x02; // 0000_0010
     cpu.registers.status.insert(Status::CARRY);
@@ -407,8 +391,7 @@ fn test_ror_accumulator_with_carry_in() {
 
 #[test]
 fn test_ror_accumulator_sets_carry() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0x03; // 0000_0011
     cpu.registers.status.remove(Status::CARRY);
@@ -432,8 +415,7 @@ fn test_ror_accumulator_sets_carry() {
 
 #[test]
 fn test_ror_rotates_through_carry() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.accumulator = 0xFF; // 1111_1111
     cpu.registers.status.insert(Status::CARRY);
@@ -457,8 +439,7 @@ fn test_ror_rotates_through_carry() {
 
 #[test]
 fn test_ror_zero_page() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x0042, 0x1E); // 0001_1110
     cpu.registers.status.remove(Status::CARRY);
@@ -483,8 +464,7 @@ fn test_ror_zero_page() {
 
 #[test]
 fn test_asl_absolute() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x1234, 0x55); // 0101_0101
 
@@ -506,8 +486,7 @@ fn test_asl_absolute() {
 
 #[test]
 fn test_lsr_absolute_x() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x05;
     bus.write(0x1239, 0xAA); // 1010_1010
@@ -530,8 +509,7 @@ fn test_lsr_absolute_x() {
 
 #[test]
 fn test_rol_absolute_x() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x10;
     bus.write(0x1244, 0x7F); // 0111_1111
@@ -555,8 +533,7 @@ fn test_rol_absolute_x() {
 
 #[test]
 fn test_ror_zero_page_x() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x03;
     bus.write(0x0045, 0x01); // 0000_0001

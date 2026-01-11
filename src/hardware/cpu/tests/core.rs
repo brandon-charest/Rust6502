@@ -16,8 +16,7 @@ fn test_cpu_new() {
 
 #[test]
 fn test_cpu_reset() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0xFFFC, 0x00);
     bus.write(0xFFFD, 0x80);
@@ -31,15 +30,14 @@ fn test_cpu_reset() {
 
 #[test]
 fn test_fetch_byte() {
-    let bus = &mut Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // Put an opcode at 0x8000
     let pc_start = 0x8000;
     cpu.registers.program_counter = pc_start;
     bus.write(pc_start, 0xEA); // NOP instruction
 
-    let opcode = cpu.fetch_byte(bus);
+    let opcode = cpu.fetch_byte(&mut bus);
 
     assert_eq!(opcode, 0xEA);
     assert_eq!(cpu.registers.program_counter, pc_start + 1);
@@ -47,8 +45,7 @@ fn test_fetch_byte() {
 
 #[test]
 fn test_fetch_u16() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0x2000, 0x34);
     bus.write(0x2001, 0x12);
@@ -60,8 +57,7 @@ fn test_fetch_u16() {
 
 #[test]
 fn test_fetch_u16_wrapping() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     bus.write(0xFFFF, 0xAA);
     bus.write(0x0000, 0xBB);
@@ -73,8 +69,7 @@ fn test_fetch_u16_wrapping() {
 
 #[test]
 fn test_nop() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     // NOP (0xEA)
     bus.write(0x8000, 0xEA);

@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn test_txa_transfers_x_to_a() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x10;
     cpu.registers.accumulator = 0x00;
@@ -20,8 +19,7 @@ fn test_txa_transfers_x_to_a() {
 
 #[test]
 fn test_txs_does_not_affect_flags() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.x_register = 0x00;
     cpu.registers.status.remove(Status::ZERO); // Clear Zero flag
@@ -39,8 +37,7 @@ fn test_txs_does_not_affect_flags() {
 
 #[test]
 fn test_tsx_affects_flags() {
-    let mut bus = Memory::new();
-    let mut cpu = CPU::new();
+    let (mut cpu, mut bus) = setup();
 
     cpu.registers.stack_pointer = 0x00;
     cpu.registers.x_register = 0xFF;

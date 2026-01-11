@@ -58,3 +58,9 @@ impl PPU {
         }
     }
 }
+
+impl Default for PPU {
+    fn default() -> Self {
+        Self::new()
+    }
+}

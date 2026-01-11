@@ -50,6 +50,11 @@ impl NesBus {
         }
     }
 }
+impl Default for NesBus {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Bus for NesBus {
     fn read(&mut self, addr: u16) -> u8 {
